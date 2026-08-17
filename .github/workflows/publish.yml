@@ -1,0 +1,46 @@
+name: Publish to npm
+
+# Publishes via npm Trusted Publishing (OIDC): GitHub and npm authenticate
+# each other with a short-lived token minted per run, so no NPM_TOKEN secret
+# is ever created, stored or rotated. npm also attaches a provenance
+# attestation linking the published tarball to this workflow and commit.
+#
+# One-time setup on npmjs.com (package Settings -> Trusted Publisher):
+#   Provider: GitHub Actions | Repository: zedd75/mcp-imo | Workflow: publish.yml
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # required to mint the OIDC token
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # Trusted publishing needs a recent npm; the runner default may lag.
+      - name: Use npm with OIDC support
+        run: npm install -g npm@latest
+
+      - run: npm ci
+
+      # Never publish a broken build: the same gates as CI, plus the live
+      # smoke suite against the public open-data APIs.
+      - run: npm run build
+      - run: npm test
+      - run: node scripts/smoke.mjs
+
+      - name: Publish
+        run: npm publish
