@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0 — 2026-08-17
+
+### Fixed
+- **Intermittent `property_report` section failures.** The tool fans out to
+  seven sections at once and each independently geocoded the same address and
+  downloaded the same commune CSVs. The value cache could not help — no call
+  had resolved yet — so identical requests hit the public open-data endpoints
+  simultaneously. That thundering herd made the weekly live smoke test fail
+  roughly one run in three, with a different section erroring each time.
+  Requests are now coalesced: concurrent calls for the same URL share a single
+  fetch.
+- Transient upstream errors (429 and 5xx responses, network timeouts) are now
+  retried up to three times with exponential backoff and jitter. 404 and 403
+  are not retried — for DVF they are a meaningful "no data for this
+  commune-year" answer.
+
+### Changed
+- Repository URLs point at `github.com/zedd75/mcp-imo` (the npm package name
+  is unchanged).
+
 ## 0.2.0 — 2026-07-16
 
 ### Added

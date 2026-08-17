@@ -17,7 +17,7 @@ import {
 
 const server = new McpServer({
   name: "mcp-immo-france",
-  version: "0.2.0",
+  version: "0.3.0",
 });
 
 type Handler<A> = (args: A) => Promise<unknown>;

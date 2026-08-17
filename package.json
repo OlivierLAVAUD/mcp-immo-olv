@@ -1,6 +1,6 @@
 {
   "name": "mcp-immo-france",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server for French real-estate intelligence: real sale prices (DVF), transparent comparables-based valuations, official rent indicators & gross yield, energy ratings (DPE), natural risks and commune data for any French address. Zero API keys.",
   "license": "MIT",
   "type": "module",
@@ -38,7 +38,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zedd75/mcp-immo-france.git"
+    "url": "git+https://github.com/zedd75/mcp-imo.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
