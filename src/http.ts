@@ -1,4 +1,6 @@
-const USER_AGENT = "mcp-immo-france/0.3 (+https://github.com/zedd75/mcp-imo)";
+import { VERSION } from "./version.js";
+
+const USER_AGENT = `mcp-immo-olv/${VERSION} (French open-data MCP; local project)`;
 const TIMEOUT_MS = 25_000;
 const MAX_ATTEMPTS = 3;
 
@@ -92,7 +94,9 @@ async function coalesce<T>(key: string, ttlMs: number, work: () => Promise<T>): 
 
   const promise = work()
     .then((value) => {
-      cacheSet(key, value);
+      // ttl=0 means "coalesce only": useful when a higher-level parsed cache
+      // owns the durable value and retaining the raw bytes would double memory.
+      if (ttlMs > 0) cacheSet(key, value);
       return value;
     })
     .finally(() => {

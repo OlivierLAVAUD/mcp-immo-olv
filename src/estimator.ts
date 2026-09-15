@@ -73,7 +73,7 @@ export function weightedQuantile(pairs: { v: number; w: number }[], q: number): 
 const PRICE_M2_MIN = 200;
 const PRICE_M2_MAX = 40000;
 
-function isCandidate(m: Mutation, type: string): boolean {
+export function isCandidate(m: Mutation, type: string): boolean {
   return (
     m.nature === "Vente" &&
     m.priceM2 !== null &&
@@ -84,11 +84,18 @@ function isCandidate(m: Mutation, type: string): boolean {
   );
 }
 
-/** Commune-wide median €/m² per year (years with at least 5 sales). */
-export function yearMedians(mutations: Mutation[], type: string): Map<number, number> {
+/**
+ * Commune-wide median €/m² per year (years with at least 5 sales).
+ *
+ * `asOf` restricts the medians to sales already recorded at that instant. That
+ * cut-off is what makes walk-forward backtesting honest: a comp must never be
+ * adjusted using a market level that was only known later.
+ */
+export function yearMedians(mutations: Mutation[], type: string, asOf?: number): Map<number, number> {
   const byYear = new Map<number, number[]>();
   for (const m of mutations) {
     if (!isCandidate(m, type)) continue;
+    if (asOf !== undefined && Date.parse(m.date) > asOf) continue;
     const year = Number(m.date.slice(0, 4));
     if (!Number.isFinite(year)) continue;
     const list = byYear.get(year);
@@ -104,21 +111,43 @@ export function yearMedians(mutations: Mutation[], type: string): Map<number, nu
 
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 
-export function estimateValue(target: Target, mutations: Mutation[]): Estimate | null {
-  const medians = yearMedians(mutations, target.type);
+export interface EstimateOptions {
+  /**
+   * Reference instant (epoch ms) for recency weighting and for the market-level
+   * adjustment. Defaults to `Date.now()` (live estimation). Walk-forward
+   * backtesting sets it to the date of the sale under test, so no future comp
+   * and no future market level can leak into the prediction.
+   */
+  asOf?: number;
+  /** Mutation ids to exclude from the comp set (e.g. the sale under test). */
+  excludeIds?: ReadonlySet<string>;
+}
+
+export function estimateValue(
+  target: Target,
+  mutations: Mutation[],
+  options: EstimateOptions = {},
+): Estimate | null {
+  const asOf = options.asOf ?? Date.now();
+  const excludeIds = options.excludeIds;
+
+  const medians = yearMedians(mutations, target.type, asOf);
   const referenceYear =
     medians.size > 0
       ? Math.max(...medians.keys())
       : Math.max(
           ...mutations.filter((m) => isCandidate(m, target.type)).map((m) => Number(m.date.slice(0, 4))),
-          new Date().getFullYear(),
+          new Date(asOf).getFullYear(),
         );
   const refMedian = medians.get(referenceYear);
 
-  const now = Date.now();
+  const now = asOf;
   const comps: CompView[] = [];
   for (const m of mutations) {
+    if (excludeIds?.has(m.id)) continue;
     if (!isCandidate(m, target.type)) continue;
+    // Strict walk-forward: only sales already recorded at the reference instant.
+    if (Date.parse(m.date) > asOf) continue;
     if (m.lat === null || m.lon === null) continue;
     const surface = m.dwellings[0].surface;
     if (surface === null || surface <= 0) continue;

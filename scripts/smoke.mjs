@@ -5,8 +5,14 @@ import {
   propertySales,
   pricePerM2,
   estimateProperty,
+  backtestEstimator,
   rentEstimate,
+  propertyTaxEstimate,
   propertyReport,
+  cadastralParcel,
+  urbanismZoning,
+  irisLookup,
+  rentControl,
   dpeLookup,
   naturalRisks,
   communeInfo,
@@ -87,6 +93,20 @@ const rent = await check(
 );
 if (rent) console.log(`  → Villeurbanne apartment: ${rent.indicators.apartment.rent_eur_m2_month} €/m²/month`);
 
+const propertyTax = await check(
+  "property_tax_estimate",
+  () => propertyTaxEstimate({ location: ADDRESS }),
+  (o) =>
+    o.typical_annual_charge_eur > 0 && o.year >= 2024
+      ? null
+      : `implausible property-tax estimate: ${JSON.stringify(o)}`,
+);
+if (propertyTax) {
+  console.log(
+    `  → ${propertyTax.typical_annual_charge_eur} €/year average per taxable article (${propertyTax.year}, ${propertyTax.coverage} coverage)`,
+  );
+}
+
 const dpe = await check("dpe_lookup", () => dpeLookup({ address: ADDRESS, limit: 3 }), (o) =>
   o.total_found > 0 ? null : "no DPE found",
 );
@@ -106,12 +126,82 @@ const report = await check(
   "property_report",
   () => propertyReport({ address: ADDRESS, type_local: "Appartement", surface_m2: 60 }),
   (o) => {
-    const sections = ["market", "recent_sales_nearby", "valuation", "rent", "energy_diagnostics", "risks", "commune"];
+    const sections = ["market", "recent_sales_nearby", "valuation", "rent", "property_tax", "energy_diagnostics", "risks", "commune"];
     const failed = sections.filter((s) => o[s] && o[s].error);
     return failed.length === 0 ? null : `sections with errors: ${failed.join(", ")}`;
   },
 );
 if (report) console.log(`  → full dossier generated for ${report.resolved_address}`);
+
+const cadastre = await check(
+  "cadastral_parcel",
+  () => cadastralParcel({ address: ADDRESS }),
+  (o) => (o.parcels_found > 0 && o.parcels[0].idu ? null : "no cadastral parcel returned"),
+);
+if (cadastre) {
+  console.log(
+    `  → parcel ${cadastre.parcels[0].idu} (section ${cadastre.parcels[0].section}), contenance ${cadastre.parcels[0].contenance_m2} m²`,
+  );
+}
+
+const urbanism = await check(
+  "urbanism_zoning",
+  () => urbanismZoning({ address: ADDRESS }),
+  (o) => (o.zoning_areas.length > 0 ? null : "no PLU zoning returned"),
+);
+if (urbanism) {
+  console.log(
+    `  → zone ${urbanism.zoning_areas[0].label} (type ${urbanism.zoning_areas[0].type}), ${urbanism.prescriptions.length} prescriptions`,
+  );
+}
+
+const neighbourhood = await check(
+  "iris_lookup",
+  () => irisLookup({ address: ADDRESS }),
+  (o) => (o.iris?.code_iris ? null : "no IRIS returned"),
+);
+if (neighbourhood) {
+  console.log(`  → IRIS ${neighbourhood.iris.code_iris} ${neighbourhood.iris.name}`);
+}
+
+const rentControlled = await check(
+  "rent_control (Paris)",
+  () => rentControl({ address: "10 rue de Rivoli Paris", rooms: 2 }),
+  (o) =>
+    o.covered && o.values.reference_eur_m2_month > 5
+      ? null
+      : `rent control not covered: ${JSON.stringify(o).slice(0, 140)}`,
+);
+if (rentControlled) {
+  console.log(
+    `  → ${rentControlled.city} ${rentControlled.area_label} (${rentControlled.year}): ref ${rentControlled.values.reference_eur_m2_month} €/m², ceiling ${rentControlled.values.ceiling_eur_m2_month} €/m²`,
+  );
+}
+
+const dpeNeuf = await check(
+  "dpe_lookup (both registers)",
+  () => dpeLookup({ address: ADDRESS, limit: 2 }),
+  (o) => (Array.isArray(o.by_dataset) && o.by_dataset.length === 2 ? null : "missing by_dataset breakdown"),
+);
+if (dpeNeuf) {
+  console.log(
+    `  → ${dpeNeuf.by_dataset.map((d) => `${d.dataset}: ${d.total_found}`).join(", ")}`,
+  );
+}
+
+const backtest = await check(
+  "backtest_estimator",
+  () => backtestEstimator({ address: ADDRESS, type_local: "Appartement", max_points: 40, from_year: 2023 }),
+  (o) =>
+    o.evaluated >= 5 && o.overall.mape_pct > 0 && o.overall.interval_coverage_pct !== null
+      ? null
+      : `implausible backtest: ${JSON.stringify(o.overall)}`,
+);
+if (backtest) {
+  console.log(
+    `  → MAPE ${backtest.overall.mape_pct} %, bias ${backtest.overall.bias_pct} %, range coverage ${backtest.overall.interval_coverage_pct} % over ${backtest.evaluated} sales`,
+  );
+}
 
 console.log(failures === 0 ? "\nAll smoke checks passed." : `\n${failures} smoke check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);

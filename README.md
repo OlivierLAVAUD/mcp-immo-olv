@@ -1,120 +1,150 @@
-# mcp-immo
+# mcp-immo-olv
 
-[![CI](https://github.com/zedd75/mcp-imo/actions/workflows/ci.yml/badge.svg)](https://github.com/zedd75/mcp-imo/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/mcp-immo-france)](https://www.npmjs.com/package/mcp-immo-france)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](package.json)
+**Intelligence immobilière française fondée sur l'open data officiel.** Donnez
+une adresse à un client MCP : il obtient les ventes notariées réelles (DVF), une
+estimation transparente par comparables, les loyers d'annonce officiels, un
+contexte de taxe foncière moyenne, les DPE, les risques Géorisques et le profil
+INSEE de la commune — sans clé API.
 
-**French real-estate intelligence for AI assistants.** Give Claude (or any MCP client) a French address and it can pull the **actual notarized sale prices** around it, produce a **transparent comparables-based valuation** with confidence bounds, compute the **gross rental yield** from official rent indicators, check the **energy rating (DPE)**, list **natural & technological risks**, and profile the commune — all from official French open data, with **zero API keys**.
+> Projet maintenu par **Olivier LAVAUD © 2026**. Distribué sous MIT ; voir
+> `LICENSE` pour les avis de copyright applicables aux portions reprises.
 
-> 🇫🇷 Serveur MCP pour l'immobilier français : ventes réelles (DVF), estimation par comparables auditable, loyers officiels et rendement locatif, DPE, risques naturels — pour n'importe quelle adresse, sans clé API. [Section française ↓](#-en-français)
+## Pourquoi
 
-## Why this exists
+Les portails affichent des prix demandés et des estimations opaques. Les données
+publiques françaises offrent mieux : actes notariés DVF, diagnostics ADEME,
+indicateurs de loyer, fiscalité locale REI, risques et référentiels d'adresses.
+`mcp-immo-olv` les relie dans des réponses auditables.
 
-Real-estate portals show *asking* prices and sell black-box estimates. The French state publishes better raw material — every notarized sale (DVF), every energy diagnostic (ADEME), modelled rents for all 35 000 communes (Carte des loyers), and the official risk report for any parcel (Géorisques) — but scattered across five APIs with three different address keys.
+Chaque chiffre expose sa source, sa portée et ses limites. Une estimation reste
+une analyse d'open data, **pas un avis de valeur professionnel ni un conseil
+financier**.
 
-`mcp-immo-france` joins them properly. One call gives an AI assistant a full due-diligence dossier:
+## Installation locale
 
-> **You:** I'm visiting a 60 m² flat at 12 rue de la République in Lyon, listed at 450 000 €. Worth it? Could I rent it out?
->
-> **Claude:** *(calls `property_report`)*
-> Comparable notarized sales value it around **304 000 €** (5 064 €/m², 200 weighted comps, high confidence) — the asking price is ~48 % above that. Median for flats within 500 m over the last 12 months: 4 848 €/m². The official rent indicator is 16.6 €/m²/month, so ≈ 1 000 €/month — a **3.9 % gross yield** at the estimated value, much less at asking. Filed DPEs in the building are D. Géorisques flags flood and clay-shrinkage exposure. Recent comparable sales: …
-
-Every number above is traceable: the tool returns its comps, weights, adjustments and sources.
-
-## What makes it different
-
-- **A real valuation engine, not a wrapper.** `estimate_property` computes a weighted-median comparables estimate (distance decay, surface similarity, recency, year-level market adjustment) and returns **every comp with its weight** so the figure can be audited. It reports a Kish effective sample size and refuses to answer below 3 comps rather than hallucinate precision.
-- **Boundary-aware search.** Commune-file-based DVF tools silently lose half the neighborhood when an address sits near a commune border. This server probes 8 compass points and fans out to every commune the radius touches.
-- **Paris/Lyon/Marseille handled correctly.** City-wide queries aggregate all municipal arrondissements (a naïve implementation returns *zero* sales for "Paris").
-- **Honest statistics by default.** €/m² only from single-dwelling deeds, outliers excluded, trailing-12-months view quoted separately from the all-period median, sources named in every response.
-- **Zero configuration.** No API key, no signup, no scraping — only official open-data endpoints.
-
-## Quickstart
-
-Requires Node.js ≥ 18.
-
-**Claude Code**
+Node.js 18 ou plus récent est requis.
 
 ```bash
-claude mcp add immo-france -- npx -y mcp-immo-france
+npm install
+npm run build
+node dist/index.js
 ```
 
-**Claude Desktop** — add to `claude_desktop_config.json`:
+Pour un client MCP compatible stdio après publication du paquet sous votre
+compte npm :
+
+```bash
+# Remplacez le nom si vous publiez sous un scope npm.
+npx -y mcp-immo-olv
+```
+
+Exemple de configuration générique :
 
 ```json
 {
   "mcpServers": {
-    "immo-france": {
+    "immo-olv": {
       "command": "npx",
-      "args": ["-y", "mcp-immo-france"]
+      "args": ["-y", "mcp-immo-olv"]
     }
   }
 }
 ```
 
-**Any other MCP client** — run `npx -y mcp-immo-france` over stdio.
+## Outils
 
-## Tools
-
-| Tool | What it does | Source |
+| Outil | Résultat | Source |
 |---|---|---|
-| `property_report` | **One call → full dossier**: market stats, recent sales, valuation, rent & yield, DPE, risks, commune profile | all of the below |
-| `estimate_property` | Transparent comparables valuation with confidence bounds, auditable comps and gross rental yield | DVF + Carte des loyers |
-| `property_sales` | Actual notarized sales (price, date, surface, rooms) around an address or across a commune, 2021→today | DVF (DGFiP / Etalab) |
-| `price_per_m2` | Median / quartiles €/m², all-period + trailing-12-months + per-year evolution | DVF (DGFiP / Etalab) |
-| `rent_estimate` | Official modelled asking rents (€/m²/month): apartments, 1-2 rooms, 3+ rooms, houses | Carte des loyers (Min. Logement / ANIL) |
-| `dpe_lookup` | Energy performance certificates filed for an address (labels A–G, GES, surface, year built) | ADEME |
-| `natural_risks` | Official risk report: flood, clay shrink-swell, radon, earthquake, industrial sites… | Géorisques |
-| `commune_info` | Population, postcodes, département, région, surface, center of any commune | geo.api.gouv.fr (INSEE) |
-| `geocode_address` / `reverse_geocode` | French address ↔ coordinates + INSEE code + BAN id | Base Adresse Nationale |
+| `property_report` | Dossier complet : marché, ventes, estimation, loyers, taxe, DPE, risques, commune, cadastre, PLU, IRIS, encadrement | Toutes les sources ci-dessous |
+| `estimate_property` | Estimation pondérée par comparables, fourchette, échantillon effectif, loyer et rendements | DVF + Carte des loyers + REI pour la taxe moyenne |
+| `backtest_estimator` | Backtest walk-forward du modèle : MAPE, biais, couverture des intervalles, par bande de surface et par année | DVF (DGFiP / Etalab) |
+| `property_sales` | Ventes notariées réelles autour d'une adresse ou dans une commune | DVF (DGFiP / Etalab) |
+| `price_per_m2` | Médiane, quartiles, évolution annuelle et fenêtre 12 mois | DVF (DGFiP / Etalab) |
+| `rent_estimate` | Indicateurs de loyer d'annonce par segment | Carte des loyers (Ministère du Logement / ANIL) |
+| `rent_control` | Loyer de référence, plafond légal (majoré) et minoré | Encadrement des loyers (Ville de Paris, Métropole de Lyon) |
+| `property_tax_estimate` | Charge annuelle moyenne par article taxable, ventilée par composante | REI (DGFiP), via API publique OFGL |
+| `dpe_lookup` | Diagnostics de performance énergétique à l'adresse, logements existants **et** neufs | ADEME (`dpe03existant`, `dpe02neuf`) |
+| `cadastral_parcel` | Parcelle cadastrale : identifiant `idu`, section, numéro, contenance officielle | PCI, IGN / DGFiP (API Carto) |
+| `urbanism_zoning` | Zone PLU (U / AU / A / N), règlement et prescriptions d'urbanisme | Géoportail de l'urbanisme (DGALN / IGN) |
+| `iris_lookup` | IRIS INSEE d'une adresse : code, nom, type, commune | CONTOURS-IRIS / ADMINEXPRESS, IGN |
+| `natural_risks` | Risques naturels et technologiques officiels | Géorisques |
+| `commune_info` | Population, code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |
+| `geocode_address` / `reverse_geocode` | Adresse ↔ coordonnées, code INSEE et identifiant BAN | Base Adresse Nationale |
 
-### Example prompts
+### Taxe foncière et rendement « net »
 
-- *« Fais-moi le rapport complet sur le 8 rue Oberkampf à Paris, appartement de 45 m². »*
-- *« Estime un T3 de 65 m² au 25 cours Gambetta à Lyon. Rendement locatif ? »*
-- *« Prix au m² des maisons à Arcachon : évolution depuis 2021 ? »*
-- *"Is this address in a flood zone? What DPE ratings were filed there?"*
+`property_tax_estimate` ne prétend **jamais** connaître l'avis de taxe foncière
+d'un bien. Le REI publie des montants agrégés et nombres d'articles imposés par
+commune : le serveur calcule leur charge moyenne, avec les composantes publiées
+(part communale, intercommunale, syndicats, GEMAPI, TEOM). L'avis réel dépend de
+la valeur locative cadastrale, des exonérations, du propriétaire et de
+l'imposition : demandez-le avant tout achat.
 
-## Methodology (and its limits)
+Le rendement après taxe moyenne retire cette seule moyenne au loyer annuel. Il
+ne déduit ni charges de copropriété, assurance, gestion, vacance, travaux ni
+impôt sur les revenus : ce n'est pas un rendement net-net.
 
-**Valuation** — weighted median over comparable sales: same dwelling type, surface within 40–250 % of the target, single-dwelling deeds only. Comps are re-expressed at the latest market level via commune-wide year medians (clamped ×0.7–1.6), then weighted by `exp(-distance/500 m) × exp(-2·|ln(surface ratio)|) × exp(-0.25·age in years)`. The 25th–75th weighted percentiles give the range; the top 200 comps by weight are kept and the Kish effective sample size is reported.
+## Méthodologie d'estimation
 
-**What the model cannot see:** condition, floor, elevator, view, renovation, legal issues. DVF also lags reality by ~6 months and does not cover Alsace-Moselle or Mayotte. Rent indicators are modelled *asking* rents (charges included), not regulated reference rents. **This is public-data analysis, not a professional appraisal, and not financial advice.**
+L'estimation est une médiane pondérée des ventes comparables : même type de
+bien, surface 40–250 % de la cible, un seul logement par acte, valeurs extrêmes
+écartées. Les prix anciens sont ramenés au niveau du dernier millésime de marché
+par commune (coefficient borné 0,7–1,6). Les poids combinent distance,
+similarité de surface et ancienneté ; les quartiles pondérés donnent la
+fourchette. Chaque comparable, son ajustement et son poids sont restitués.
 
-| Dataset | Publisher | Notes |
+Le moteur refuse une estimation sous trois comparables. Il ne connaît ni l'état,
+ni l'étage, ni la vue, ni les travaux, ni les contraintes juridiques.
+
+### Backtesting du moteur
+
+`backtest_estimator` rejoue le moteur sur les ventes de la commune : chaque vente
+est estimée en n'utilisant **que les ventes enregistrées avant sa propre date**
+(découpe `asOf`, acte exclu), puis comparée au prix réellement payé. Aucun
+comparable futur, aucun niveau de marché futur ne peut fuiter.
+
+Il publie la MAPE, l'erreur médiane et le 90ᵉ centile, le biais signé (positif =
+le modèle surestime) et la couverture de l'intervalle P25–P75 — à lire près de
+**50 %**, pas 95 % : un intervalle P25–P75 bien calibré contient la moitié des
+ventes réalisées. Le tout est ventilé par bande de surface et par année, avec
+les dix plus grosses erreurs pour audit. Une exécution de contrôle sur Lyon
+donne une MAPE d'environ 21 %, un biais de +8 % et une couverture de 52,5 %.
+
+## Sources, licences et limites
+
+| Jeu | Producteur | Usage dans le serveur |
 |---|---|---|
-| [DVF géolocalisées](https://files.data.gouv.fr/geo-dvf/) | DGFiP / Etalab | Notarized sales, 2021→today |
-| [Carte des loyers](https://www.data.gouv.fr/fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2025/) | Min. Logement / ANIL | Modelled asking rents, 2025 |
-| [DPE logements existants](https://data.ademe.fr/datasets/dpe03existant) | ADEME | All diagnostics since July 2021 |
-| [Géorisques](https://www.georisques.gouv.fr/) | Min. Transition écologique | Official risk reports |
-| [Base Adresse Nationale](https://adresse.data.gouv.fr/) / [geo.api.gouv.fr](https://geo.api.gouv.fr/) | IGN / DINUM / INSEE | Addresses & administrative units |
+| DVF géolocalisées | DGFiP / Etalab | Ventes 2021 → présent ; **aucune source géolocalisée avant 2021** ; pas d'Alsace-Moselle ni Mayotte ; délai de publication |
+| Carte des loyers | Ministère du Logement / ANIL | Loyer d'annonce modélisé, charges comprises ; pas un loyer de référence réglementé |
+| Encadrement des loyers | Ville de Paris, Métropole de Lyon | Loyers de référence des zones couvertes uniquement ; « non couvert » est renvoyé explicitement ailleurs |
+| REI | DGFiP, exposé par OFGL | Fiscalité locale agrégée ; moyenne par article, jamais taxe individuelle |
+| DPE logements existants et neufs | ADEME | Diagnostics `dpe03existant` et `dpe02neuf`, chacun étiqueté par registre |
+| Cadastre (PCI) | IGN / DGFiP | Parcelle, `idu` et contenance ; jamais la propriété ni le droit de construire |
+| Géoportail de l'urbanisme | DGALN / IGN | Zonage et prescriptions opposables ; les communes sans PLU en sont absentes |
+| CONTOURS-IRIS / ADMINEXPRESS | IGN (source INSEE) | Identité de l'IRIS ; aucune donnée socio-démographique dans cette couche |
+| Géorisques | Ministère de la Transition écologique | Rapport de risques officiel |
+| BAN / geo.api.gouv.fr | IGN / DINUM / INSEE | Adresses et unités administratives |
 
-## Development
+Les jeux publics sont interrogés en direct, sans clé API. Le cache mémoire DVF
+réduit la latence et les appels répétés, mais est vidé au redémarrage.
+
+## Développement
 
 ```bash
 npm install
-npm run build     # tsc
-npm test          # 30+ unit tests, no network
-npm run smoke     # end-to-end against the live public APIs
-npm run smoke -- "5 avenue Anatole France Paris"
+npm run build
+npm test          # tests unitaires, sans réseau
+npm run smoke     # vérification live des API publiques
+
+cd ui
+npm install
+npm run dev       # console avec hot reload : http://localhost:5173
+npm run build
+npm start         # console compilée + pont MCP : http://localhost:8787
+npm run smoke     # test de rendu avec fixtures réelles
 ```
 
-Dependency-light on purpose: the MCP SDK, `zod`, and the Node standard library. A weekly CI job runs the live smoke suite to catch upstream dataset changes early. PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+## Licence
 
-## Roadmap
-
-- [ ] Cadastral parcel lookup (surface, geometry)
-- [ ] New-build DPE dataset (`dpe02neuf`)
-- [ ] Streamable HTTP transport for remote deployment
-- [ ] Per-quarter market trend detection
-
-## 🇫🇷 En français
-
-Serveur [MCP](https://modelcontextprotocol.io) qui branche Claude (ou tout client MCP) sur l'open data officiel de l'immobilier français : **ventes notariées** (DVF), **estimation par comparables** dont chaque comparable et chaque poids sont restitués (pas de boîte noire), **loyers officiels** (Carte des loyers) avec **rendement brut**, **DPE** (ADEME), **rapport de risques** (Géorisques) et données INSEE. Aucune clé API : `npx -y mcp-immo-france` et c'est en place.
-
-L'outil `property_report` génère en un appel un dossier complet de due diligence pour n'importe quelle adresse — le genre d'analyse qu'on paie ailleurs, ici open source et auditable.
-
-## License
-
-[MIT](LICENSE)
+MIT. Copyright **© 2026 Olivier LAVAUD** ; les avis de copyright des portions
+reprises restent dans `LICENSE`, conformément aux conditions MIT.

@@ -7,17 +7,24 @@ import {
   propertySales,
   pricePerM2,
   estimateProperty,
+  backtestEstimator,
   rentEstimate,
+  propertyTaxEstimate,
   propertyReport,
+  cadastralParcel,
+  urbanismZoning,
+  irisLookup,
+  rentControl,
   dpeLookup,
   naturalRisks,
   communeInfo,
   whatIsHere,
 } from "./handlers.js";
+import { VERSION } from "./version.js";
 
 const server = new McpServer({
-  name: "mcp-immo-france",
-  version: "0.3.0",
+  name: "mcp-immo-olv",
+  version: VERSION,
 });
 
 type Handler<A> = (args: A) => Promise<unknown>;
@@ -37,10 +44,26 @@ function wrap<A>(handler: Handler<A>) {
   };
 }
 
+// Shared schema fragments: one definition per reused input, so every tool
+// describes the same parameter the same way.
 const yearsSchema = z
   .array(z.number().int())
   .optional()
   .describe("DVF years to include (2021-2025). Defaults to all.");
+const typeLocalSchema = () =>
+  z.enum(["Appartement", "Maison"]).optional().describe("Filter by dwelling type");
+const radiusSchema = (def: number, min = 20) =>
+  z
+    .number()
+    .min(min)
+    .max(5000)
+    .optional()
+    .describe(`Search radius in meters around the address (default ${def}; ignored for city-wide queries)`);
+const pointInputSchema = () => ({
+  address: z.string().optional().describe("Address in France (alternative to lat/lon)"),
+  lat: z.number().optional(),
+  lon: z.number().optional(),
+});
 
 server.registerTool(
   "geocode_address",
@@ -64,14 +87,9 @@ server.registerTool(
       "List actual notarized property sales (price, date, surface, rooms) recorded by the French tax administration (DVF) around an address, or for a whole commune if only a city is given. Data 2021-2025, no API key.",
     inputSchema: {
       address: z.string().describe("Address, street or city in France"),
-      radius_m: z
-        .number()
-        .min(20)
-        .max(5000)
-        .optional()
-        .describe("Search radius in meters around the address (default 300; ignored for city-wide queries)"),
+      radius_m: radiusSchema(300),
       years: yearsSchema,
-      type_local: z.enum(["Appartement", "Maison"]).optional().describe("Filter by dwelling type"),
+      type_local: typeLocalSchema(),
       min_surface_m2: z.number().optional(),
       max_surface_m2: z.number().optional(),
       limit: z.number().int().min(1).max(100).optional().describe("Max sales returned (default 30)"),
@@ -88,14 +106,9 @@ server.registerTool(
       "Compute price-per-m² statistics (median, mean, quartiles, per-year evolution) from actual notarized sales around a French address or across a commune. Data 2021-2025.",
     inputSchema: {
       address: z.string().describe("Address, street or city in France"),
-      type_local: z.enum(["Appartement", "Maison"]).optional().describe("Restrict to flats or houses"),
+      type_local: typeLocalSchema(),
       years: yearsSchema,
-      radius_m: z
-        .number()
-        .min(50)
-        .max(5000)
-        .optional()
-        .describe("Radius in meters around the address (default 500; ignored for city-wide queries)"),
+      radius_m: radiusSchema(500, 50),
     },
   },
   wrap(pricePerM2),
@@ -132,14 +145,28 @@ server.registerTool(
 );
 
 server.registerTool(
+  "property_tax_estimate",
+  {
+    title: "Average property tax by commune (REI)",
+    description:
+      "Returns the annual average charge per taxable REI article for taxe foncière on built properties, including published communal, intercommunal, syndicate, GEMAPI and TEOM components. It is an aggregate proxy, not an individual property's tax bill. Source: DGFiP REI via OFGL.",
+    inputSchema: {
+      location: z.string().describe("Address, commune name or INSEE code"),
+      year: z.number().int().min(2024).max(2100).optional().describe("REI tax year; defaults to the latest available year"),
+    },
+  },
+  wrap(propertyTaxEstimate),
+);
+
+server.registerTool(
   "property_report",
   {
     title: "Full property due-diligence report",
     description:
-      "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators — plus a comparables-based valuation and gross yield when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property.",
+      "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators and an aggregate taxe foncière proxy — plus a comparables-based valuation, gross yield and yield after average property tax when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property.",
     inputSchema: {
       address: z.string().describe("Address in France"),
-      type_local: z.enum(["Appartement", "Maison"]).optional(),
+      type_local: typeLocalSchema(),
       surface_m2: z.number().min(8).max(1000).optional(),
       rooms: z.number().int().min(1).max(20).optional(),
     },
@@ -156,6 +183,10 @@ server.registerTool(
     inputSchema: {
       address: z.string().describe("Address in France"),
       limit: z.number().int().min(1).max(50).optional().describe("Max diagnostics returned (default 10)"),
+      dataset: z
+        .enum(["all", "existant", "neuf"])
+        .optional()
+        .describe("DPE register: existing dwellings (dpe03existant), new dwellings (dpe02neuf), or both (default all)"),
     },
   },
   wrap(dpeLookup),
@@ -168,9 +199,7 @@ server.registerTool(
     description:
       "Official risk report for a French address or point: flood, clay shrink-swell, radon, earthquake, industrial sites... Source: Géorisques (Ministère de la Transition écologique).",
     inputSchema: {
-      address: z.string().optional().describe("Address in France (alternative to lat/lon)"),
-      lat: z.number().optional(),
-      lon: z.number().optional(),
+      ...pointInputSchema(),
     },
   },
   wrap(naturalRisks),
@@ -200,6 +229,89 @@ server.registerTool(
     },
   },
   wrap(whatIsHere),
+);
+
+server.registerTool(
+  "backtest_estimator",
+  {
+    title: "Walk-forward backtest of the valuation model",
+    description:
+      "Replay the comparable-sales estimator on the commune's own notarized sales: every historical sale is valued using only the sales recorded before it (no look-ahead, own deed excluded), then compared with the price actually paid. Returns MAPE, median and 90th-percentile absolute error, signed bias, P25–P75 range coverage and the same metrics by surface band and by year. Use it to say how reliable estimate_property is in this specific market.",
+    inputSchema: {
+      address: z.string().describe("Precise address (street or house number) in France"),
+      type_local: z.enum(["Appartement", "Maison"]).describe("Property type to backtest"),
+      from_year: z
+        .number()
+        .int()
+        .min(2021)
+        .optional()
+        .describe("First sale year to evaluate (default: every year available)"),
+      to_year: z.number().int().optional().describe("Last sale year to evaluate"),
+      max_points: z
+        .number()
+        .int()
+        .min(1)
+        .max(1000)
+        .optional()
+        .describe("Max sales evaluated, most recent first (default 250)"),
+    },
+  },
+  wrap(backtestEstimator),
+);
+
+server.registerTool(
+  "cadastral_parcel",
+  {
+    title: "Cadastral parcel at an address",
+    description:
+      "Official cadastral parcel(s) containing an address: unique cadastral id (idu) quoted on deeds, section, number and the official contenance in m². The contenance is the taxed area of the whole parcel, land included — not the dwelling's habitable surface — and the cadastre never records ownership. Source: IGN / DGFiP via API Carto.",
+    inputSchema: {
+      ...pointInputSchema(),
+    },
+  },
+  wrap(cadastralParcel),
+);
+
+server.registerTool(
+  "urbanism_zoning",
+  {
+    title: "Urbanism rules at an address (PLU)",
+    description:
+      "Urbanism zoning and prescriptions applicable to an address, from the Géoportail de l'urbanisme: zoning area label and type (U urban, AU to be urbanised, A agricultural, N natural), the regulation document reference, and the surface / linear / point prescriptions (emplacements réservés, protected areas, alignments…). It states which rules apply, never whether a project is permitted. Source: GPU, DGALN / IGN.",
+    inputSchema: {
+      ...pointInputSchema(),
+    },
+  },
+  wrap(urbanismZoning),
+);
+
+server.registerTool(
+  "iris_lookup",
+  {
+    title: "IRIS neighbourhood of an address",
+    description:
+      "Identify the IRIS — INSEE's infra-communal statistical unit, about 2 000 inhabitants — containing an address: 9-character IRIS code, name, type and commune. Join that code to INSEE's IRIS tables for population and Filosofi income. Boundaries from IGN ADMINEXPRESS; this layer carries identity only, no socio-demographic figures.",
+    inputSchema: {
+      address: z.string().describe("Address in France"),
+    },
+  },
+  wrap(irisLookup),
+);
+
+server.registerTool(
+  "rent_control",
+  {
+    title: "Rent-control reference rents",
+    description:
+      "Loyer de référence, loyer de référence majoré (the legal ceiling) and minoré, in €/m²/month, for a rent-controlled area — by number of rooms, construction period and furnished status. Covers only the areas whose authority publishes an open grid (Paris, Métropole de Lyon); the response states explicitly when an address is not covered instead of guessing. Sources: Ville de Paris, Métropole de Lyon.",
+    inputSchema: {
+      address: z.string().describe("Address in France"),
+      rooms: z.number().int().min(1).max(10).optional().describe("Number of rooms (pièces)"),
+      furnished: z.boolean().optional().describe("Furnished (true) or unfurnished (false)"),
+      period: z.string().optional().describe("Construction period label, e.g. '1946-1970'"),
+    },
+  },
+  wrap(rentControl),
 );
 
 const transport = new StdioServerTransport();

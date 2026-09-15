@@ -5,6 +5,68 @@ import { haversineMeters, departementFromInsee, expandPlmCodes } from "../util/g
 export const DVF_FIRST_YEAR = 2021;
 
 /**
+ * `fetchText` already coalesces and caches downloaded CSV bytes. Parsing a
+ * multi-MB commune file into rows is still costly, though — and property_report
+ * can ask for the same commune/year via several sections. Keep a separate LRU
+ * of parsed rows so repeated reports avoid both network I/O and CSV parsing.
+ *
+ * This is process-local by design: never pretend that an in-memory cache is a
+ * durable data store. A restart simply performs fresh open-data reads.
+ */
+export const DVF_PARSED_CACHE_TTL_MS = 24 * 60 * 60_000;
+export const DVF_PARSED_CACHE_MAX_ENTRIES = 64;
+
+interface ParsedEntry {
+  at: number;
+  rows: DvfRow[];
+}
+
+class ParsedDvfCache {
+  private readonly entries = new Map<string, ParsedEntry>();
+  private readonly pending = new Map<string, Promise<DvfRow[]>>();
+
+  async getOrLoad(key: string, load: () => Promise<DvfRow[]>): Promise<DvfRow[]> {
+    const cached = this.entries.get(key);
+    if (cached && Date.now() - cached.at < DVF_PARSED_CACHE_TTL_MS) {
+      // A Map's insertion order gives us an inexpensive real LRU.
+      this.entries.delete(key);
+      this.entries.set(key, cached);
+      return cached.rows;
+    }
+    if (cached) this.entries.delete(key);
+
+    const running = this.pending.get(key);
+    if (running) return running;
+
+    const promise = load()
+      .then((rows) => {
+        if (this.entries.size >= DVF_PARSED_CACHE_MAX_ENTRIES) {
+          const oldest = this.entries.keys().next().value;
+          if (oldest !== undefined) this.entries.delete(oldest);
+        }
+        this.entries.set(key, { at: Date.now(), rows });
+        return rows;
+      })
+      .finally(() => this.pending.delete(key));
+
+    this.pending.set(key, promise);
+    return promise;
+  }
+
+  clear(): void {
+    this.entries.clear();
+    this.pending.clear();
+  }
+}
+
+const parsedCommuneYearCache = new ParsedDvfCache();
+
+/** Test-only reset; never needed by production callers. */
+export function clearParsedDvfCacheForTests(): void {
+  parsedCommuneYearCache.clear();
+}
+
+/**
  * Candidate years in the geo-dvf distribution. Future years that are not
  * published yet simply 404 and are treated as empty, so new releases are
  * picked up automatically without a code change.
@@ -91,15 +153,21 @@ export function rowsFromCsv(text: string): DvfRow[] {
  * (commune with no recorded sales that year).
  */
 export async function fetchCommuneYear(inseeCode: string, year: number): Promise<DvfRow[]> {
-  const dept = departementFromInsee(inseeCode);
-  const url = `https://files.data.gouv.fr/geo-dvf/latest/csv/${year}/communes/${dept}/${inseeCode}.csv`;
-  try {
-    const text = await fetchText(url);
-    return rowsFromCsv(text);
-  } catch (e) {
-    if (e instanceof HttpError && (e.status === 404 || e.status === 403)) return [];
-    throw e;
-  }
+  const key = `${inseeCode}:${year}`;
+  return parsedCommuneYearCache.getOrLoad(key, async () => {
+    const dept = departementFromInsee(inseeCode);
+    const url = `https://files.data.gouv.fr/geo-dvf/latest/csv/${year}/communes/${dept}/${inseeCode}.csv`;
+    try {
+      // Parsed rows own the durable cache. ttl=0 keeps fetchText's in-flight
+      // deduplication but deliberately avoids retaining a second copy of the
+      // same multi-MB CSV string alongside the parsed rows.
+      const text = await fetchText(url, 0);
+      return rowsFromCsv(text);
+    } catch (e) {
+      if (e instanceof HttpError && (e.status === 404 || e.status === 403)) return [];
+      throw e;
+    }
+  });
 }
 
 /**

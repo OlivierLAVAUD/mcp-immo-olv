@@ -1,6 +1,22 @@
 import { fetchJson } from "../http.js";
 
-const BASE = "https://data.ademe.fr/data-fair/api/v1/datasets/dpe03existant/lines";
+/**
+ * ADEME publishes two DPE datasets that share exactly the same schema:
+ *  - `dpe03existant` — diagnostics filed for existing dwellings (since 2021);
+ *  - `dpe02neuf`     — diagnostics filed for new dwellings.
+ * Querying both is the difference between "no DPE on file" and "no *existing*
+ * DPE on file, but this building is new".
+ */
+export const DPE_DATASETS = {
+  existant: "https://data.ademe.fr/data-fair/api/v1/datasets/dpe03existant/lines",
+  neuf: "https://data.ademe.fr/data-fair/api/v1/datasets/dpe02neuf/lines",
+} as const;
+export type DpeDataset = keyof typeof DPE_DATASETS;
+export const DPE_DATASET_LABELS: Record<DpeDataset, string> = {
+  existant: "DPE logements existants (ADEME)",
+  neuf: "DPE logements neufs (ADEME)",
+};
+export const DPE_DATASET_ORDER: DpeDataset[] = ["existant", "neuf"];
 
 const SELECT = [
   "adresse_ban",
@@ -32,13 +48,22 @@ interface DpeResponse {
 }
 
 /** Exact match on the BAN interoperability id (e.g. "75102_6998_00010"). */
-export async function dpeByBanId(banId: string, size = 20): Promise<DpeResponse> {
-  const url = `${BASE}?size=${size}&qs=${encodeURIComponent(`identifiant_ban:"${banId}"`)}&select=${SELECT}&sort=-date_etablissement_dpe`;
+export async function dpeByBanId(
+  banId: string,
+  size = 20,
+  dataset: DpeDataset = "existant",
+): Promise<DpeResponse> {
+  const url = `${DPE_DATASETS[dataset]}?size=${size}&qs=${encodeURIComponent(`identifiant_ban:"${banId}"`)}&select=${SELECT}&sort=-date_etablissement_dpe`;
   return fetchJson<DpeResponse>(url);
 }
 
 /** Fuzzy search on the BAN address, restricted to one commune. */
-export async function dpeByAddress(address: string, inseeCode: string, size = 20): Promise<DpeResponse> {
+export async function dpeByAddress(
+  address: string,
+  inseeCode: string,
+  size = 20,
+  dataset: DpeDataset = "existant",
+): Promise<DpeResponse> {
   const params = new URLSearchParams({
     size: String(size),
     q: address,
@@ -47,5 +72,5 @@ export async function dpeByAddress(address: string, inseeCode: string, size = 20
     select: SELECT,
     sort: "-date_etablissement_dpe",
   });
-  return fetchJson<DpeResponse>(`${BASE}?${params.toString()}`);
+  return fetchJson<DpeResponse>(`${DPE_DATASETS[dataset]}?${params.toString()}`);
 }

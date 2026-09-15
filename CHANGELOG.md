@@ -1,50 +1,77 @@
 # Changelog
 
+## 0.5.0 — 2026-09-14
+
+### Added
+
+- **`backtest_estimator`.** Walk-forward backtest of the comparables engine:
+  every historical sale is re-valued using only the sales recorded before it
+  (own deed excluded, future market levels impossible to leak in), then scored
+  against the price actually paid. Reports MAPE, median and 90th-percentile
+  absolute error, signed bias, P25–P75 interval coverage, and the same metrics
+  by surface band and by year. The `estimate_property` engine gained the
+  `asOf` / `excludeIds` options that make this honest.
+- **`cadastral_parcel`.** Official cadastral parcel at an address: unique
+  cadastral id (`idu`), section, number and the taxed `contenance` in m².
+  Source: IGN / DGFiP PCI, via API Carto.
+- **`urbanism_zoning`.** Urbanism zoning and prescriptions from the Géoportail
+  de l'urbanisme: zoning label and type (U / AU / A / N), regulation document,
+  and the surface, linear and point prescriptions. States which rules apply —
+  never whether a project is permitted.
+- **`iris_lookup`.** The IRIS — INSEE's infra-communal statistical unit —
+  containing an address, with its 9-character code, name, type and commune.
+  Boundaries: IGN ADMINEXPRESS.
+- **`rent_control`.** Loyer de référence, majoré (legal ceiling) and minoré per
+  m² per month, by rooms, construction period and furnished status, for the
+  areas whose authority publishes an open grid (Paris, Métropole de Lyon). An
+  address outside a covered area gets an explicit "not covered" answer.
+- **DPE neuf.** `dpe_lookup` now queries both `dpe03existant` and `dpe02neuf`,
+  tags each row with its register, and accepts a `dataset` filter.
+- `property_report` gained `cadastre`, `urbanism`, `iris` and `rent_control`
+  sections, each isolated so one upstream outage degrades one block only.
+
+### Notes
+
+- **DVF coverage is unchanged, and stated explicitly.** The geo-dvf
+  distribution publishes geolocated sales from 2021 onwards only. Pre-2021 DVF
+  exists as all-France, non-geolocated per-year archives, which cannot back a
+  per-address radius or comparables query; the Cerema DVF+ publishing channel
+  has no machine-readable endpoint. Year handling stays data-driven, so new
+  millésimes are picked up automatically without a code change.
+
+## 0.4.0 — 2026-09-14
+
+### Added
+
+- **Parsed DVF LRU cache.** Repeated commune/year reads now reuse parsed rows
+  for 24 hours (up to 64 entries), avoiding both public-data downloads and CSV
+  parsing. Concurrent reads still collapse to a single request.
+- **`property_tax_estimate`.** Commune-level average annual tax context from
+  the official DGFiP REI fiscal dataset, queried through OFGL's public API.
+  It returns communal, intercommunal, syndicate, GEMAPI and TEOM components
+  whenever they are published.
+- **Yield after average property tax.** `estimate_property` and
+  `property_report` now report a clearly qualified yield after the REI average
+  charge. It is not an individual taxe foncière bill.
+- Local React console (`ui/`) to inspect the full dossier and every MCP tool.
+
+### Changed
+
+- Project stewardship and package metadata are now maintained by **Olivier
+  LAVAUD**.
+- The server is identified as `mcp-immo-olv` for future local/npm use. Confirm
+  npm-name availability before publishing.
+
 ## 0.3.0 — 2026-08-17
 
 ### Fixed
-- **Intermittent `property_report` section failures.** The tool fans out to
-  seven sections at once and each independently geocoded the same address and
-  downloaded the same commune CSVs. The value cache could not help — no call
-  had resolved yet — so identical requests hit the public open-data endpoints
-  simultaneously. That thundering herd made the weekly live smoke test fail
-  roughly one run in three, with a different section erroring each time.
-  Requests are now coalesced: concurrent calls for the same URL share a single
-  fetch.
-- Transient upstream errors (429 and 5xx responses, network timeouts) are now
-  retried up to three times with exponential backoff and jitter. 404 and 403
-  are not retried — for DVF they are a meaningful "no data for this
-  commune-year" answer.
 
-### Changed
-- Repository URLs point at `github.com/zedd75/mcp-imo` (the npm package name
-  is unchanged).
+- Concurrent requests for an identical public-data URL share a single fetch.
+- Transient upstream errors (429, 5xx and network timeouts) retry with
+  exponential backoff; 404 and 403 remain meaningful DVF no-data answers.
 
-## 0.2.0 — 2026-07-16
+## Earlier releases
 
-### Added
-- `estimate_property`: transparent comparables-based valuation (weighted median,
-  year-level market adjustment, auditable comps, Kish effective sample size,
-  confidence rating) with official rent indicator and gross yield.
-- `rent_estimate`: Carte des loyers 2025 indicators (apartments overall, 1–2
-  rooms, 3+ rooms, houses) for any commune.
-- `property_report`: one-call full due-diligence dossier (market, sales,
-  valuation, rent, DPE, risks, commune) with independently failing sections.
-- Boundary-aware radius search: queries near a commune border now fan out to
-  every commune the radius touches (8-point compass probe).
-- `price_per_m2` now reports a trailing-12-months block alongside the
-  all-period and per-year statistics.
-- DVF years are discovered dynamically (future vintages picked up without a
-  code change).
-
-### Fixed
-- City-wide queries on Paris, Lyon and Marseille returned zero sales: the
-  geo-dvf distribution has no city-level file for them. City codes are now
-  expanded to all municipal arrondissements.
-- HTTP requests now carry a 25 s timeout; the response cache is a true LRU.
-
-## 0.1.0 — 2026-07-16
-
-Initial release: `geocode_address`, `reverse_geocode`, `property_sales`,
-`price_per_m2`, `dpe_lookup`, `natural_risks`, `commune_info` over DVF, BAN,
-ADEME, Géorisques and geo.api.gouv.fr. Unit tests, live smoke suite, CI.
+Earlier releases introduced the transparent comparable-sales valuation,
+official rent indicators, due-diligence report, boundary-aware DVF search,
+DPE, natural-risk and commune tools.
