@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 — 2026-09-15
+
+### Changed
+
+- **Handlers refactored into domain modules** (`market`, `valuation`, `context`,
+  `report`); runtime version centralized in `src/version.ts`; duplicated MCP
+  tool schemas deduplicated via shared fragments.
+- Package metadata now declares the source repository (`repository`, `homepage`,
+  `bugs` in `package.json`, `repositoryUrl` in `server.json`).
+
 ## 0.5.0 — 2026-09-14
 
 ### Added
