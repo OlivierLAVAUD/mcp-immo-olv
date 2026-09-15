@@ -1,13 +1,7 @@
 # mcp-immo-olv
 
-**Intelligence immobilière française fondée sur l'open data officiel.** Donnez
-une adresse à un client MCP : il obtient les ventes notariées réelles (DVF), une
-estimation transparente par comparables, les loyers d'annonce officiels, un
-contexte de taxe foncière moyenne, les DPE, les risques Géorisques et le profil
-INSEE de la commune — sans clé API.
-
-> Projet maintenu par **Olivier LAVAUD © 2026**. Distribué sous MIT ; voir
-> `LICENSE` pour les avis de copyright applicables aux portions reprises.
+**Données immobilières françaises issues de l'open data public**
+À partir d'une adresse, un client MCP peut consulter les ventes notariées (DVF), obtenir une estimation par comparables, les loyers d'annonce, une indication de la taxe foncière, les DPE, les risques Géorisques et le profil INSEE de la commune — sans clé API.. 
 
 ## Pourquoi
 
