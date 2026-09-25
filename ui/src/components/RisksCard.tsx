@@ -1,5 +1,5 @@
 import type { RiskEntry, RisksBlock } from "../types";
-import { Card, Empty } from "./ui";
+import { Alert, Card, Empty } from "./ui";
 
 /**
  * Géorisques phrases the status per risk: "Risque Existant" (you are exposed),
@@ -36,6 +36,30 @@ function RiskList({ title, entries }: { title: string; entries: RiskEntry[] }) {
 export default function RisksCard({ block }: { block: RisksBlock }) {
   const natural = block.naturalRisks ?? [];
   const techno = block.technologicalRisks ?? [];
+
+  // Géorisques did not answer. Falling through would print "no risk reported at
+  // this address", which reads as a clean bill of health — the exact opposite
+  // of what an unanswered source tells us.
+  if (block.available === false) {
+    return (
+      <Card title="Risques naturels et technologiques">
+        <Alert kind="warn" title="Source indisponible — statut des risques inconnu">
+          Géorisques n'a pas répondu
+          {block.unavailable?.reason ? ` (${block.unavailable.reason})` : ""}. À cette adresse, le
+          statut des risques est <strong>inconnu</strong> — ce qui n'est pas la même chose
+          qu'« aucun risque ».
+          {block.unavailable?.portal_url ? (
+            <>
+              {" "}
+              <a href={block.unavailable.portal_url} target="_blank" rel="noreferrer">
+                Vérifier sur georisques.gouv.fr
+              </a>
+            </>
+          ) : null}
+        </Alert>
+      </Card>
+    );
+  }
 
   return (
     <Card

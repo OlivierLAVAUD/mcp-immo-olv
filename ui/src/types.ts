@@ -238,6 +238,9 @@ export interface RisksBlock {
   naturalRisks?: RiskEntry[];
   technologicalRisks?: RiskEntry[];
   officialReportUrl?: string | null;
+  /** false when Géorisques did not answer: the empty lists mean "unknown", not "no risk". */
+  available?: boolean;
+  unavailable?: { reason: string; portal_url: string };
 }
 
 // -------------------------------------------------------------------- commune

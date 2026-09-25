@@ -112,10 +112,26 @@ const dpe = await check("dpe_lookup", () => dpeLookup({ address: ADDRESS, limit:
 );
 if (dpe) console.log(`  → ${dpe.total_found} DPE, first label: ${dpe.diagnostics[0]?.etiquette_dpe}`);
 
-const risks = await check("natural_risks", () => naturalRisks({ address: ADDRESS }), (o) =>
-  o.naturalRisks.length > 0 || o.technologicalRisks.length > 0 ? null : "empty risk report",
+// The tool degrades to `available: false` when Géorisques is down, so the smoke
+// test has to say so explicitly — otherwise an upstream outage would silently
+// turn into a green run.
+const risks = await check(
+  "natural_risks",
+  () => naturalRisks({ address: ADDRESS }),
+  (o) =>
+    o.available === false
+      ? `SOURCE UNAVAILABLE — risks at this address are unknown: ${o.unavailable?.reason ?? "no reason given"}`
+      : o.naturalRisks.length > 0 || o.technologicalRisks.length > 0
+        ? null
+        : "empty risk report",
 );
-if (risks) console.log(`  → ${risks.naturalRisks.length} natural risks present`);
+if (risks) {
+  console.log(
+    risks.available === false
+      ? `  → unavailable (${risks.unavailable?.reason})`
+      : `  → ${risks.naturalRisks.length} natural risks present`,
+  );
+}
 
 const commune = await check("commune_info", () => communeInfo({ query: "Lyon" }), (o) =>
   o.communes[0]?.population > 100000 ? null : "unexpected commune data",
@@ -127,8 +143,10 @@ const report = await check(
   () => propertyReport({ address: ADDRESS, type_local: "Appartement", surface_m2: 60 }),
   (o) => {
     const sections = ["market", "recent_sales_nearby", "valuation", "rent", "property_tax", "energy_diagnostics", "risks", "commune"];
-    const failed = sections.filter((s) => o[s] && o[s].error);
-    return failed.length === 0 ? null : `sections with errors: ${failed.join(", ")}`;
+    // A section that degraded to an explicit "source unavailable" is a failure
+    // of this smoke test too: the dossier is incomplete, not just quiet.
+    const failed = sections.filter((s) => o[s] && (o[s].error || o[s].available === false));
+    return failed.length === 0 ? null : `sections with errors or unavailable sources: ${failed.join(", ")}`;
   },
 );
 if (report) console.log(`  → full dossier generated for ${report.resolved_address}`);

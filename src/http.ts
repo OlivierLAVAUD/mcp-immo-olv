@@ -55,8 +55,14 @@ export class HttpError extends Error {
   }
 }
 
-/** 404/403 are meaningful answers here (no DVF file for that commune-year). */
-function isRetryable(e: unknown): boolean {
+/**
+ * True when a failure is transient — the upstream is overloaded, down, or the
+ * socket died — as opposed to a meaningful answer such as the 404 that says
+ * "no DVF file for this commune-year". Callers that would rather degrade than
+ * fail share this predicate, so the retry policy and the degradation policy
+ * can never drift apart: see src/apis/georisques.ts.
+ */
+export function isRetryable(e: unknown): boolean {
   if (e instanceof HttpError) return e.status === 429 || e.status >= 500;
   return true; // network error, timeout, aborted socket
 }

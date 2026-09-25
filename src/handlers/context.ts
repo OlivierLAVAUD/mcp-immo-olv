@@ -62,6 +62,11 @@ export async function naturalRisks(args: { address?: string; lat?: number; lon?:
     source: "Géorisques, Ministère de la Transition écologique",
     resolved_address: resolved ?? report.address,
     ...report,
+    // An outage must never read as a clean bill of health: `available: false`
+    // means the status is unknown, not that the address is risk-free.
+    note: report.available
+      ? "Only the risks Géorisques reports as present are listed: statusAtAddress is the situation at this exact address, statusInCommune the one elsewhere in the commune."
+      : "Géorisques could not be reached, so the risk status at this address is UNKNOWN. This is not a statement that the address is risk-free — retry later, or check the official portal.",
   };
 }
 

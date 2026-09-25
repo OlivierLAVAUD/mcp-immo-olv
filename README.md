@@ -132,7 +132,7 @@ donne une MAPE d'environ 21 %, un biais de +8 % et une couverture de 52,5 %.
 | Cadastre (PCI) | IGN / DGFiP | Parcelle, `idu` et contenance ; jamais la propriété ni le droit de construire |
 | Géoportail de l'urbanisme | DGALN / IGN | Zonage et prescriptions opposables ; les communes sans PLU en sont absentes |
 | CONTOURS-IRIS / ADMINEXPRESS | IGN (source INSEE) | Identité de l'IRIS ; aucune donnée socio-démographique dans cette couche |
-| Géorisques | Ministère de la Transition écologique | Rapport de risques officiel |
+| Géorisques | Ministère de la Transition écologique | Rapport de risques officiel ; si leur API ne répond pas, la réponse porte `available: false` et le dit explicitement au lieu de renvoyer une liste vide |
 | BAN / geo.api.gouv.fr | IGN / DINUM / INSEE | Adresses et unités administratives |
 
 Les jeux publics sont interrogés en direct, sans clé API. Le cache mémoire DVF
