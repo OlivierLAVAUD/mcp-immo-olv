@@ -1,14 +1,17 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "fr.olivier-lavaud/mcp-immo",
-  "description": "French real-estate intelligence: notarized sale prices (DVF), transparent comparables valuations with walk-forward backtesting, official rent indicators, rent-control reference grids, average property-tax context, DPE energy ratings (existing and new dwellings), cadastral parcels, PLU urbanism zoning, IRIS neighbourhoods, Géorisques risk reports and INSEE commune data. Zero API keys.",
-  "version": "1.0.1",
-  "repositoryUrl": "https://github.com/OlivierLAVAUD/mcp-immo-olv",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.OlivierLAVAUD/mcp-immo",
+  "description": "French real-estate intelligence from official open data: DVF, valuations, rents, tax, DPE, risks.",
+  "repository": {
+    "url": "https://github.com/OlivierLAVAUD/mcp-immo-olv",
+    "source": "github"
+  },
+  "version": "1.0.2",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "mcp-immo-olv",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }
