@@ -111,11 +111,17 @@ function decodeToolResult(res) {
     .filter((b) => b && b.type === "text")
     .map((b) => b.text)
     .join("\n");
-  let data = text;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    // Not JSON (an error string, say) — keep the raw text.
+  // Tools answer with a validated `structuredContent` object next to the legacy
+  // text block (MCP 2025-06-18). Take the typed payload when it is there, and
+  // fall back to parsing the text so an older server still drives this console.
+  let data = res?.structuredContent;
+  if (data === undefined) {
+    data = text;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Not JSON (an error string, say) — keep the raw text.
+    }
   }
   return { isError: Boolean(res?.isError), text, data };
 }

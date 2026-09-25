@@ -111,6 +111,23 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `commune_info` | Population, code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |
 | `geocode_address` / `reverse_geocode` | Adresse ↔ coordonnées, code INSEE et identifiant BAN | Base Adresse Nationale |
 
+### Sortie structurée
+
+Les 16 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
+MCP 2025-06-18). Chaque appel renvoie donc la même charge utile deux fois :
+`structuredContent`, l'objet validé par le SDK avant envoi, et le bloc texte JSON
+historique, conservé pour les clients antérieurs à cette révision. Un client peut
+typer le résultat, le rendre sans le reparser, et faire confiance à la forme
+annoncée — `estimate_property` promet `estimate.per_m2.estimate`,
+`estimate.confidence`, `estimate.top_comps[]`, et le serveur échoue plutôt que de
+livrer autre chose.
+
+Les schémas sont volontairement **ouverts** (`additionalProperties: true`) : un
+champ ajouté par une source en amont ne peut pas invalider un outil. Ils sont
+vérifiés à deux niveaux — `test/output-schemas.test.ts` les confronte à un
+payload réel capturé (`ui/fixtures/property-report-lyon.json`), et `npm run smoke`
+valide les réponses live contre les mêmes schémas.
+
 ### Taxe foncière et rendement « net »
 
 `property_tax_estimate` ne prétend **jamais** connaître l'avis de taxe foncière
@@ -184,7 +201,16 @@ npm start         # console compilée + pont MCP : http://localhost:8787
 npm run smoke     # test de rendu avec fixtures réelles
 ```
 
+Depuis la racine, les mêmes commandes sont accessibles sans changer de dossier
+(`npm run dev` délègue à `ui/`) :
+
+```bash
+npm --prefix ui install
+npm run dev       # console avec hot reload
+npm run ui:build  # compile l'interface
+npm run ui:start  # console compilée + pont MCP sur un seul port
+```
+
 ## Licence
 
-MIT. Copyright **© 2026 Olivier LAVAUD** ; les avis de copyright des portions
-reprises restent dans `LICENSE`, conformément aux conditions MIT.
+MIT. Copyright **© 2026 Olivier LAVAUD** (voir `LICENSE`).

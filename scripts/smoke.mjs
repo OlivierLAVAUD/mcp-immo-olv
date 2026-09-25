@@ -17,13 +17,36 @@ import {
   naturalRisks,
   communeInfo,
 } from "../dist/handlers.js";
+import { OUTPUT_SCHEMAS } from "../dist/output-schemas.js";
 
 const ADDRESS = process.argv[2] ?? "12 rue de la République Lyon";
 let failures = 0;
 
-async function check(name, fn, assert) {
+/**
+ * The declared output schema is part of the contract, so it is smoke-tested
+ * against the live payload too. The captured fixtures in test/ freeze the shape
+ * offline; this is what catches an upstream API changing one on us.
+ */
+function schemaViolation(toolName, payload) {
+  const schema = toolName ? OUTPUT_SCHEMAS[toolName] : undefined;
+  if (!schema) return null;
+  const parsed = schema.safeParse(payload);
+  if (parsed.success) return null;
+  return parsed.error.issues
+    .slice(0, 3)
+    .map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`)
+    .join("; ");
+}
+
+async function check(name, fn, assert, toolName = name) {
   try {
     const out = await fn();
+    const violation = schemaViolation(toolName, out);
+    if (violation) {
+      failures++;
+      console.log(`✗ ${name}: output schema violation — ${violation}`);
+      return out;
+    }
     const problem = assert(out);
     if (problem) {
       failures++;
@@ -69,6 +92,7 @@ const paris = await check(
   "price_per_m2 city-wide Paris (PLM regression)",
   () => pricePerM2({ address: "Paris", type_local: "Appartement", years: [2024] }),
   (o) => (o.all_period.sales > 10000 && o.all_period.median_eur_m2 > 5000 ? null : `Paris looks wrong: ${JSON.stringify(o.all_period)}`),
+  "price_per_m2",
 );
 if (paris) console.log(`  → Paris 2024: ${paris.all_period.sales} sales, median ${paris.all_period.median_eur_m2} €/m²`);
 
@@ -189,6 +213,7 @@ const rentControlled = await check(
     o.covered && o.values.reference_eur_m2_month > 5
       ? null
       : `rent control not covered: ${JSON.stringify(o).slice(0, 140)}`,
+  "rent_control",
 );
 if (rentControlled) {
   console.log(
@@ -200,6 +225,7 @@ const dpeNeuf = await check(
   "dpe_lookup (both registers)",
   () => dpeLookup({ address: ADDRESS, limit: 2 }),
   (o) => (Array.isArray(o.by_dataset) && o.by_dataset.length === 2 ? null : "missing by_dataset breakdown"),
+  "dpe_lookup",
 );
 if (dpeNeuf) {
   console.log(

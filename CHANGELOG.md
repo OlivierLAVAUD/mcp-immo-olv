@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Structured tool output.** All 16 tools now declare the JSON Schema of what
+  they return (`outputSchema`, MCP 2025-06-18) and answer with a validated
+  `structuredContent` object, so a client can type and render a result instead of
+  parsing a JSON string. The text block is still emitted for clients that predate
+  the revision. The schemas are open (`additionalProperties: true`): a field added
+  upstream cannot invalidate a tool.
+- 16 contract tests (`test/output-schemas.test.ts`) covering the published
+  `tools/list` schemas, an in-memory call through the real SDK, a tool failure
+  that stays a failure, and the recorded Lyon dossier replayed against the
+  schemas. `npm run smoke` now validates every live payload against the same
+  contracts.
+- `src/server.ts`: the tool registry is built by `createServer()` and can be
+  attached to any transport, which is what makes the contracts testable. The
+  entry point only connects stdio.
+
+### Changed
+
+- The web console reads `structuredContent` when the server provides it, and falls
+  back to parsing the text block otherwise.
+
 ## 1.0.3 — 2026-09-25
 
 ### Fixed
