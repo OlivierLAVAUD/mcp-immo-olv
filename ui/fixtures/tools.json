@@ -1,0 +1,527 @@
+[
+  {
+    "name": "geocode_address",
+    "title": "Geocode a French address",
+    "description": "Resolve a French address, street, or city to normalized candidates with coordinates, INSEE city code and BAN id (Base Adresse Nationale). Use this first if an address is ambiguous.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Free-form address, e.g. '10 rue de la Paix Paris'"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Max candidates (default 5)"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "property_sales",
+    "title": "Real property sales around an address (DVF)",
+    "description": "List actual notarized property sales (price, date, surface, rooms) recorded by the French tax administration (DVF) around an address, or for a whole commune if only a city is given. Data 2021-2025, no API key.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address, street or city in France"
+        },
+        "radius_m": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 5000,
+          "description": "Search radius in meters around the address (default 300; ignored for city-wide queries)"
+        },
+        "years": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "DVF years to include (2021-2025). Defaults to all."
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ],
+          "description": "Filter by dwelling type"
+        },
+        "min_surface_m2": {
+          "type": "number"
+        },
+        "max_surface_m2": {
+          "type": "number"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Max sales returned (default 30)"
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "price_per_m2",
+    "title": "Price per m² statistics (DVF)",
+    "description": "Compute price-per-m² statistics (median, mean, quartiles, per-year evolution) from actual notarized sales around a French address or across a commune. Data 2021-2025.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address, street or city in France"
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ],
+          "description": "Restrict to flats or houses"
+        },
+        "years": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "DVF years to include (2021-2025). Defaults to all."
+        },
+        "radius_m": {
+          "type": "number",
+          "minimum": 50,
+          "maximum": 5000,
+          "description": "Radius in meters around the address (default 500; ignored for city-wide queries)"
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "estimate_property",
+    "title": "Estimate a property's value (comparables)",
+    "description": "Transparent comparables-based valuation of a flat or house at a precise French address: weighted median of nearby single-dwelling notarized sales, adjusted to current market level, with every comp and weight returned for audit. Also returns the official rent indicator and gross rental yield.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Precise address (street + number preferred)"
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ]
+        },
+        "surface_m2": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 1000,
+          "description": "Living surface in m²"
+        },
+        "rooms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Main rooms (pièces principales) — refines the rent indicator"
+        }
+      },
+      "required": [
+        "address",
+        "type_local",
+        "surface_m2"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "rent_estimate",
+    "title": "Rent indicators (Carte des loyers)",
+    "description": "Official modelled asking rents (€/m²/month, charges included) for any French commune: apartments overall, 1-2 rooms, 3+ rooms, and houses. Source: Carte des loyers, Ministère du Logement / ANIL.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "description": "Address, commune name or INSEE code"
+        },
+        "surface_m2": {
+          "type": "number",
+          "description": "If given, also returns the estimated monthly rent"
+        }
+      },
+      "required": [
+        "location"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "property_tax_estimate",
+    "title": "Average property tax by commune (REI)",
+    "description": "Returns the annual average charge per taxable REI article for taxe foncière on built properties, including published communal, intercommunal, syndicate, GEMAPI and TEOM components. It is an aggregate proxy, not an individual property's tax bill. Source: DGFiP REI via OFGL.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "description": "Address, commune name or INSEE code"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 2024,
+          "maximum": 2100,
+          "description": "REI tax year; defaults to the latest available year"
+        }
+      },
+      "required": [
+        "location"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "property_report",
+    "title": "Full property due-diligence report",
+    "description": "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators and an aggregate taxe foncière proxy — plus a comparables-based valuation, gross yield and yield after average property tax when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France"
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ]
+        },
+        "surface_m2": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 1000
+        },
+        "rooms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "dpe_lookup",
+    "title": "Energy performance diagnostics (DPE)",
+    "description": "Find official energy performance certificates (DPE: energy label A-G, GES label, surface, construction year) filed for a French address. Source: ADEME open data.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Max diagnostics returned (default 10)"
+        },
+        "dataset": {
+          "type": "string",
+          "enum": [
+            "all",
+            "existant",
+            "neuf"
+          ],
+          "description": "DPE register: existing dwellings (dpe03existant), new dwellings (dpe02neuf), or both (default all)"
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "natural_risks",
+    "title": "Natural & technological risks (Géorisques)",
+    "description": "Official risk report for a French address or point: flood, clay shrink-swell, radon, earthquake, industrial sites... Source: Géorisques (Ministère de la Transition écologique).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France (alternative to lat/lon)"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "commune_info",
+    "title": "Commune information",
+    "description": "Population, postcodes, département, région, surface and center coordinates of a French commune, by name or INSEE code.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Commune name or 5-char INSEE code (e.g. 'Lyon' or '69123')"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "reverse_geocode",
+    "title": "Reverse geocode",
+    "description": "Find the nearest French address for GPS coordinates.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "lat",
+        "lon"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "backtest_estimator",
+    "title": "Walk-forward backtest of the valuation model",
+    "description": "Replay the comparable-sales estimator on the commune's own notarized sales: every historical sale is valued using only the sales recorded before it (no look-ahead, own deed excluded), then compared with the price actually paid. Returns MAPE, median and 90th-percentile absolute error, signed bias, P25–P75 range coverage and the same metrics by surface band and by year. Use it to say how reliable estimate_property is in this specific market.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Precise address (street or house number) in France"
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ],
+          "description": "Property type to backtest"
+        },
+        "from_year": {
+          "type": "integer",
+          "minimum": 2021,
+          "description": "First sale year to evaluate (default: every year available)"
+        },
+        "to_year": {
+          "type": "integer",
+          "description": "Last sale year to evaluate"
+        },
+        "max_points": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Max sales evaluated, most recent first (default 250)"
+        }
+      },
+      "required": [
+        "address",
+        "type_local"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "cadastral_parcel",
+    "title": "Cadastral parcel at an address",
+    "description": "Official cadastral parcel(s) containing an address: unique cadastral id (idu) quoted on deeds, section, number and the official contenance in m². The contenance is the taxed area of the whole parcel, land included — not the dwelling's habitable surface — and the cadastre never records ownership. Source: IGN / DGFiP via API Carto.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France (alternative to lat/lon)"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "urbanism_zoning",
+    "title": "Urbanism rules at an address (PLU)",
+    "description": "Urbanism zoning and prescriptions applicable to an address, from the Géoportail de l'urbanisme: zoning area label and type (U urban, AU to be urbanised, A agricultural, N natural), the regulation document reference, and the surface / linear / point prescriptions (emplacements réservés, protected areas, alignments…). It states which rules apply, never whether a project is permitted. Source: GPU, DGALN / IGN.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France (alternative to lat/lon)"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "iris_lookup",
+    "title": "IRIS neighbourhood of an address",
+    "description": "Identify the IRIS — INSEE's infra-communal statistical unit, about 2 000 inhabitants — containing an address: 9-character IRIS code, name, type and commune. Join that code to INSEE's IRIS tables for population and Filosofi income. Boundaries from IGN ADMINEXPRESS; this layer carries identity only, no socio-demographic figures.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France"
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "rent_control",
+    "title": "Rent-control reference rents",
+    "description": "Loyer de référence, loyer de référence majoré (the legal ceiling) and minoré, in €/m²/month, for a rent-controlled area — by number of rooms, construction period and furnished status. Covers only the areas whose authority publishes an open grid (Paris, Métropole de Lyon); the response states explicitly when an address is not covered instead of guessing. Sources: Ville de Paris, Métropole de Lyon.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France"
+        },
+        "rooms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of rooms (pièces)"
+        },
+        "furnished": {
+          "type": "boolean",
+          "description": "Furnished (true) or unfurnished (false)"
+        },
+        "period": {
+          "type": "string",
+          "description": "Construction period label, e.g. '1946-1970'"
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  }
+]

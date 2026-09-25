@@ -1,0 +1,768 @@
+{
+  "resolved_address": "12 Rue de la République 69002 Lyon",
+  "market": {
+    "source": "DVF (Demandes de valeurs foncières), DGFiP / Etalab — actual notarized sales. Alsace-Moselle and Mayotte are not covered.",
+    "query": {
+      "resolved_address": "12 Rue de la République 69002 Lyon",
+      "scope": "within 600 m of the address (communes searched: 69382, 69381, 69386, 69383, 69385)",
+      "type_local": "Appartement",
+      "years": [
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ]
+    },
+    "all_period": {
+      "sales": 1417,
+      "median_eur_m2": 5691,
+      "mean_eur_m2": 5784,
+      "p25_eur_m2": 4724,
+      "p75_eur_m2": 6667
+    },
+    "last_12_months": {
+      "window": "2024-12-30 → 2025-12-30",
+      "sales": 269,
+      "median_eur_m2": 4962,
+      "mean_eur_m2": 5094,
+      "p25_eur_m2": 4259,
+      "p75_eur_m2": 5931
+    },
+    "by_year": {
+      "2021": {
+        "sales": 349,
+        "median_eur_m2": 6098
+      },
+      "2022": {
+        "sales": 324,
+        "median_eur_m2": 6153
+      },
+      "2023": {
+        "sales": 248,
+        "median_eur_m2": 5572
+      },
+      "2024": {
+        "sales": 232,
+        "median_eur_m2": 5194
+      },
+      "2025": {
+        "sales": 264,
+        "median_eur_m2": 4951
+      }
+    },
+    "note": "Computed from single-dwelling notarized sales only, outliers (<200 or >40 000 €/m²) excluded. Quote last_12_months for current market level."
+  },
+  "recent_sales_nearby": {
+    "source": "DVF (Demandes de valeurs foncières), DGFiP / Etalab — actual notarized sales. Alsace-Moselle and Mayotte are not covered.",
+    "query": {
+      "resolved_address": "12 Rue de la République 69002 Lyon",
+      "scope": "within 400 m of the address (communes searched: 69382, 69381, 69386)",
+      "years": [
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ]
+    },
+    "total_matching_sales": 692,
+    "sales": [
+      {
+        "date": "2025-12-22",
+        "nature": "Vente",
+        "price_eur": 220000,
+        "addresses": [
+          "31 RUE MERCIERE"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 55,
+            "rooms": 2
+          }
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": 4000
+      },
+      {
+        "date": "2025-12-22",
+        "nature": "Vente",
+        "price_eur": 171864,
+        "addresses": [
+          "51 RUE MERCIERE"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 88,
+            "rooms": 3
+          }
+        ],
+        "other_locals": [
+          "Dépendance"
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": 1953
+      },
+      {
+        "date": "2025-12-19",
+        "nature": "Vente",
+        "price_eur": 5500,
+        "addresses": [
+          "6 RUE LONGUE"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 52,
+            "rooms": 3
+          },
+          {
+            "type": "Appartement",
+            "surface": 40,
+            "rooms": 2
+          }
+        ],
+        "other_locals": [
+          "Dépendance"
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": null
+      },
+      {
+        "date": "2025-12-19",
+        "nature": "Vente",
+        "price_eur": 468000,
+        "addresses": [
+          "10 RUE DE LA PLATIERE"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 80,
+            "rooms": 3
+          }
+        ],
+        "other_locals": [
+          "Dépendance"
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": 5850
+      },
+      {
+        "date": "2025-12-19",
+        "nature": "Vente",
+        "price_eur": 2060000,
+        "addresses": [
+          "5 RUE STE-MAR-DES-TERREAUX"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 93,
+            "rooms": 4
+          },
+          {
+            "type": "Appartement",
+            "surface": 54,
+            "rooms": 2
+          },
+          {
+            "type": "Appartement",
+            "surface": 95,
+            "rooms": 4
+          },
+          {
+            "type": "Appartement",
+            "surface": 81,
+            "rooms": 3
+          },
+          {
+            "type": "Appartement",
+            "surface": 90,
+            "rooms": 3
+          },
+          {
+            "type": "Appartement",
+            "surface": 52,
+            "rooms": 2
+          },
+          {
+            "type": "Appartement",
+            "surface": 95,
+            "rooms": 4
+          },
+          {
+            "type": "Appartement",
+            "surface": 54,
+            "rooms": 2
+          },
+          {
+            "type": "Appartement",
+            "surface": 95,
+            "rooms": 4
+          },
+          {
+            "type": "Appartement",
+            "surface": 31,
+            "rooms": 1
+          }
+        ],
+        "other_locals": [
+          "Local industriel. commercial ou assimilé"
+        ],
+        "land_surface_m2": 3192,
+        "price_per_m2": null
+      },
+      {
+        "date": "2025-12-18",
+        "nature": "Vente",
+        "price_eur": 320000,
+        "addresses": [
+          "33 RUE PAUL CHENAVARD"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 66,
+            "rooms": 3
+          }
+        ],
+        "other_locals": [
+          "Dépendance"
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": 4848
+      },
+      {
+        "date": "2025-12-15",
+        "nature": "Vente",
+        "price_eur": 179040,
+        "addresses": [
+          "7 RUE PUITS GAILLOT"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 38,
+            "rooms": 1
+          }
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": 4712
+      },
+      {
+        "date": "2025-12-12",
+        "nature": "Vente",
+        "price_eur": 460000,
+        "addresses": [
+          "25 RUE PAUL CHENAVARD"
+        ],
+        "dwellings": [
+          {
+            "type": "Appartement",
+            "surface": 90,
+            "rooms": 3
+          }
+        ],
+        "land_surface_m2": null,
+        "price_per_m2": 5111
+      }
+    ],
+    "note": "price_per_m2 is only set when a deed covers exactly one dwelling; deeds bundling several units show the bundle price."
+  },
+  "valuation": {
+    "source": "DVF (Demandes de valeurs foncières), DGFiP / Etalab — actual notarized sales. Alsace-Moselle and Mayotte are not covered.",
+    "query": {
+      "resolved_address": "12 Rue de la République 69002 Lyon",
+      "type_local": "Appartement",
+      "surface_m2": 60,
+      "communes_searched": [
+        "69382",
+        "69034",
+        "69386",
+        "69387",
+        "69385",
+        "69389",
+        "69384"
+      ]
+    },
+    "estimate": {
+      "per_m2": {
+        "estimate": 5167,
+        "low": 4344,
+        "high": 6009
+      },
+      "value_eur": {
+        "estimate": 310000,
+        "low": 261000,
+        "high": 361000
+      },
+      "confidence": "high",
+      "comps_used": 200,
+      "effective_sample_size": 177.2,
+      "reference_year": 2025,
+      "year_medians_eur_m2": {
+        "2021": 4983,
+        "2022": 5000,
+        "2023": 4775,
+        "2024": 4437,
+        "2025": 4430
+      },
+      "top_comps": [
+        {
+          "date": "2025-09-15",
+          "address": "21 RUE GENTIL",
+          "distance_m": 65,
+          "surface_m2": 68,
+          "rooms": 4,
+          "price_eur": 364000,
+          "price_m2": 5353,
+          "price_m2_adjusted": 5353,
+          "year_adjustment": 1,
+          "weight": 1
+        },
+        {
+          "date": "2025-02-06",
+          "address": "45 RUE GRENETTE",
+          "distance_m": 165,
+          "surface_m2": 60,
+          "rooms": 2,
+          "price_eur": 240000,
+          "price_m2": 4000,
+          "price_m2_adjusted": 4000,
+          "year_adjustment": 1,
+          "weight": 0.904
+        },
+        {
+          "date": "2023-11-27",
+          "address": "11 RUE GENTIL",
+          "distance_m": 30,
+          "surface_m2": 63,
+          "rooms": 2,
+          "price_eur": 295000,
+          "price_m2": 4683,
+          "price_m2_adjusted": 4344,
+          "year_adjustment": 0.928,
+          "weight": 0.796
+        },
+        {
+          "date": "2025-03-10",
+          "address": "14 RUE DE BREST",
+          "distance_m": 250,
+          "surface_m2": 60,
+          "rooms": 2,
+          "price_eur": 410000,
+          "price_m2": 6833,
+          "price_m2_adjusted": 6833,
+          "year_adjustment": 1,
+          "weight": 0.779
+        },
+        {
+          "date": "2025-06-02",
+          "address": "44 RUE HENRI GERMAIN",
+          "distance_m": 165,
+          "surface_m2": 68,
+          "rooms": 1,
+          "price_eur": 383100,
+          "price_m2": 5634,
+          "price_m2_adjusted": 5634,
+          "year_adjustment": 1,
+          "weight": 0.762
+        },
+        {
+          "date": "2025-09-03",
+          "address": "3 RUE DES QUATRE CHAPEAUX",
+          "distance_m": 278,
+          "surface_m2": 57,
+          "rooms": 2,
+          "price_eur": 316000,
+          "price_m2": 5544,
+          "price_m2_adjusted": 5544,
+          "year_adjustment": 1,
+          "weight": 0.75
+        },
+        {
+          "date": "2025-03-13",
+          "address": "13 RUE MERCIERE",
+          "distance_m": 259,
+          "surface_m2": 59,
+          "rooms": 2,
+          "price_eur": 225000,
+          "price_m2": 3814,
+          "price_m2_adjusted": 3814,
+          "year_adjustment": 1,
+          "weight": 0.741
+        },
+        {
+          "date": "2025-12-22",
+          "address": "31 RUE MERCIERE",
+          "distance_m": 305,
+          "surface_m2": 55,
+          "rooms": 2,
+          "price_eur": 220000,
+          "price_m2": 4000,
+          "price_m2_adjusted": 4000,
+          "year_adjustment": 1,
+          "weight": 0.714
+        },
+        {
+          "date": "2025-07-18",
+          "address": "4 QUAI SAINT ANTOINE",
+          "distance_m": 294,
+          "surface_m2": 57,
+          "rooms": 2,
+          "price_eur": 340000,
+          "price_m2": 5965,
+          "price_m2_adjusted": 5965,
+          "year_adjustment": 1,
+          "weight": 0.704
+        },
+        {
+          "date": "2025-07-29",
+          "address": "30 RUE DE BREST",
+          "distance_m": 311,
+          "surface_m2": 57,
+          "rooms": 3,
+          "price_eur": 379100,
+          "price_m2": 6651,
+          "price_m2_adjusted": 6651,
+          "year_adjustment": 1,
+          "weight": 0.685
+        }
+      ]
+    },
+    "rental": {
+      "source": "Carte des loyers 2025, Ministère du Logement / ANIL — modelled asking rents (charges included).",
+      "indicator": "apartment_3plus_rooms",
+      "scope": "commune",
+      "rent_eur_m2_month": 16.63,
+      "range_eur_m2_month": [
+        12.15,
+        22.76
+      ],
+      "estimated_monthly_rent_eur": 998,
+      "gross_yield_pct": 3.86,
+      "property_tax_average": {
+        "source": "REI (Recensement des éléments d'imposition à la fiscalité directe locale), DGFiP — queried through OFGL public data API",
+        "source_url": "https://data.ofgl.fr/explore/dataset/rei/",
+        "insee_code": "69123",
+        "year": 2025,
+        "typical_annual_charge_eur": 1798,
+        "components": [
+          {
+            "code": "commune",
+            "label": "Part communale TFPB",
+            "amount_eur": 356796260,
+            "taxable_articles": 237157,
+            "average_charge_eur": 1504
+          },
+          {
+            "code": "intercommunality",
+            "label": "Part intercommunale TFPB",
+            "amount_eur": 6125928,
+            "taxable_articles": 237157,
+            "average_charge_eur": 26
+          },
+          {
+            "code": "syndicates",
+            "label": "Part syndicats TFPB",
+            "amount_eur": 1352691,
+            "taxable_articles": 237157,
+            "average_charge_eur": 6
+          },
+          {
+            "code": "gemapi",
+            "label": "Part GEMAPI TFPB",
+            "amount_eur": 2752833,
+            "taxable_articles": 236922,
+            "average_charge_eur": 12
+          },
+          {
+            "code": "teom",
+            "label": "TEOM",
+            "amount_eur": 60156548,
+            "taxable_articles": 240807,
+            "average_charge_eur": 250
+          }
+        ],
+        "coverage": "complete",
+        "caveats": [
+          "This is the aggregate tax charge per taxable REI article in the commune, not an individual tax bill for the property.",
+          "An actual taxe foncière depends on the cadastral rental value, exemptions, ownership and the assessment; use the avis de taxe foncière to underwrite a purchase.",
+          "Components without a published amount or article count are excluded; coverage is declared explicitly."
+        ]
+      },
+      "net_yield_after_average_property_tax_pct": 3.28
+    },
+    "caveats": [
+      "Comparables-based estimate from public notarized sales; condition, floor, view, renovation state are unknown to the model.",
+      "Every comp and weight is listed in top_comps — audit them before quoting the figure.",
+      "This is public-data analysis, not a professional appraisal (avis de valeur)."
+    ]
+  },
+  "rent": {
+    "source": "Carte des loyers 2025, Ministère du Logement / ANIL — modelled asking rents (charges included).",
+    "location": "12 Rue de la République 69002 Lyon",
+    "insee_code": "69382",
+    "year": 2025,
+    "indicators": {
+      "apartment_1_2_rooms": {
+        "rent_eur_m2_month": 20.31,
+        "range_eur_m2_month": [
+          15.68,
+          26.31
+        ],
+        "scope": "commune",
+        "listings_observed": 8381,
+        "estimated_monthly_rent_eur": 1219
+      },
+      "apartment_3plus_rooms": {
+        "rent_eur_m2_month": 16.63,
+        "range_eur_m2_month": [
+          12.15,
+          22.76
+        ],
+        "scope": "commune",
+        "listings_observed": 6524,
+        "estimated_monthly_rent_eur": 998
+      },
+      "house": {
+        "rent_eur_m2_month": 14.63,
+        "range_eur_m2_month": [
+          9.6,
+          22.29
+        ],
+        "scope": "commune",
+        "listings_observed": 60,
+        "estimated_monthly_rent_eur": 878
+      },
+      "apartment": {
+        "rent_eur_m2_month": 17.61,
+        "range_eur_m2_month": [
+          12.93,
+          23.98
+        ],
+        "scope": "commune",
+        "listings_observed": 15165,
+        "estimated_monthly_rent_eur": 1057
+      }
+    },
+    "note": "Modelled asking rents (charges included) from SeLoger/Leboncoin listings — not regulated reference rents."
+  },
+  "property_tax": {
+    "query": {
+      "resolved_location": "12 Rue de la République 69002 Lyon",
+      "insee_code": "69382"
+    },
+    "source": "REI (Recensement des éléments d'imposition à la fiscalité directe locale), DGFiP — queried through OFGL public data API",
+    "source_url": "https://data.ofgl.fr/explore/dataset/rei/",
+    "insee_code": "69123",
+    "year": 2025,
+    "typical_annual_charge_eur": 1798,
+    "components": [
+      {
+        "code": "commune",
+        "label": "Part communale TFPB",
+        "amount_eur": 356796260,
+        "taxable_articles": 237157,
+        "average_charge_eur": 1504
+      },
+      {
+        "code": "intercommunality",
+        "label": "Part intercommunale TFPB",
+        "amount_eur": 6125928,
+        "taxable_articles": 237157,
+        "average_charge_eur": 26
+      },
+      {
+        "code": "syndicates",
+        "label": "Part syndicats TFPB",
+        "amount_eur": 1352691,
+        "taxable_articles": 237157,
+        "average_charge_eur": 6
+      },
+      {
+        "code": "gemapi",
+        "label": "Part GEMAPI TFPB",
+        "amount_eur": 2752833,
+        "taxable_articles": 236922,
+        "average_charge_eur": 12
+      },
+      {
+        "code": "teom",
+        "label": "TEOM",
+        "amount_eur": 60156548,
+        "taxable_articles": 240807,
+        "average_charge_eur": 250
+      }
+    ],
+    "coverage": "complete",
+    "caveats": [
+      "This is the aggregate tax charge per taxable REI article in the commune, not an individual tax bill for the property.",
+      "An actual taxe foncière depends on the cadastral rental value, exemptions, ownership and the assessment; use the avis de taxe foncière to underwrite a purchase.",
+      "Components without a published amount or article count are excluded; coverage is declared explicitly."
+    ]
+  },
+  "energy_diagnostics": {
+    "source": "ADEME — DPE logements existants (open data)",
+    "query": {
+      "resolved_address": "12 Rue de la République 69002 Lyon",
+      "ban_id": "69382_6005_00012",
+      "match": "exact BAN id"
+    },
+    "total_found": 7,
+    "diagnostics": [
+      {
+        "adresse_ban": "12 Rue de la République 69002 Lyon",
+        "etiquette_ges": "D",
+        "identifiant_ban": "69382_6005_00012",
+        "type_batiment": "appartement",
+        "conso_5_usages_par_m2_ep": 152,
+        "date_etablissement_dpe": "2025-04-16",
+        "surface_habitable_logement": 91.2,
+        "etiquette_dpe": "D",
+        "_score": null
+      },
+      {
+        "adresse_ban": "12 Rue de la République 69002 Lyon",
+        "etiquette_ges": "B",
+        "identifiant_ban": "69382_6005_00012",
+        "type_batiment": "appartement",
+        "conso_5_usages_par_m2_ep": 185.8,
+        "date_etablissement_dpe": "2025-01-16",
+        "surface_habitable_logement": 32.5,
+        "etiquette_dpe": "C",
+        "_score": null
+      },
+      {
+        "adresse_ban": "12 Rue de la République 69002 Lyon",
+        "etiquette_ges": "D",
+        "identifiant_ban": "69382_6005_00012",
+        "type_batiment": "appartement",
+        "conso_5_usages_par_m2_ep": 149.1,
+        "date_etablissement_dpe": "2024-10-15",
+        "surface_habitable_logement": 64,
+        "etiquette_dpe": "D",
+        "_score": null
+      },
+      {
+        "adresse_ban": "12 Rue de la République 69002 Lyon",
+        "etiquette_ges": "C",
+        "identifiant_ban": "69382_6005_00012",
+        "type_batiment": "appartement",
+        "conso_5_usages_par_m2_ep": 115.8,
+        "date_etablissement_dpe": "2024-08-28",
+        "surface_habitable_logement": 63.7,
+        "etiquette_dpe": "C",
+        "_score": null
+      },
+      {
+        "adresse_ban": "12 Rue de la République 69002 Lyon",
+        "etiquette_ges": "A",
+        "identifiant_ban": "69382_6005_00012",
+        "type_batiment": "appartement",
+        "conso_5_usages_par_m2_ep": 162.8,
+        "date_etablissement_dpe": "2022-05-19",
+        "surface_habitable_logement": 24.5,
+        "etiquette_dpe": "C",
+        "_score": null
+      }
+    ],
+    "note": "etiquette_dpe = energy label (A best – G worst), etiquette_ges = greenhouse-gas label. conso_5_usages_par_m2_ep is primary energy in kWh/m²/year."
+  },
+  "risks": {
+    "source": "Géorisques, Ministère de la Transition écologique",
+    "resolved_address": "12 Rue de la République 69002 Lyon",
+    "address": "12 Rue de la République, 69002 Lyon",
+    "commune": "Lyon 69002",
+    "naturalRisks": [
+      {
+        "risk": "Inondation",
+        "statusAtAddress": "Risque Existant",
+        "statusInCommune": "Risque Existant"
+      },
+      {
+        "risk": "Remontée de nappe",
+        "statusAtAddress": "Risque Existant",
+        "statusInCommune": "Risque Existant"
+      },
+      {
+        "risk": "Séisme",
+        "statusAtAddress": "Risque Existant - faible",
+        "statusInCommune": "Risque Existant - faible"
+      },
+      {
+        "risk": "Retrait gonflement des argiles",
+        "statusAtAddress": "Risque Existant - modéré",
+        "statusInCommune": "Risque Existant - modéré"
+      },
+      {
+        "risk": "Radon",
+        "statusAtAddress": "Risque Existant - faible",
+        "statusInCommune": "Risque Existant - important"
+      }
+    ],
+    "technologicalRisks": [
+      {
+        "risk": "Installations industrielles classées (ICPE)",
+        "statusAtAddress": "Risque non Concerne",
+        "statusInCommune": "Risque Concerne"
+      },
+      {
+        "risk": "Canalisations de transport de matières dangereuses",
+        "statusAtAddress": "Risque non Concerne",
+        "statusInCommune": "Risque Concerne"
+      },
+      {
+        "risk": "Pollution des sols",
+        "statusAtAddress": "Risque Concerne",
+        "statusInCommune": "Risque Concerne"
+      },
+      {
+        "risk": "Rupture de barrage",
+        "statusAtAddress": "Risque Inconnu",
+        "statusInCommune": "Risque Concerne"
+      }
+    ],
+    "officialReportUrl": "https://www.georisques.gouv.fr/mes-risques/connaitre-les-risques-pres-de-chez-moi/rapport2?typeForm=adresse&city=Lyon&codeInsee=69123&lon=4.835769&lat=45.76511&adresse=12+Rue+de+la+R%C3%A9publique%2C+69002+Lyon"
+  },
+  "commune": {
+    "source": "geo.api.gouv.fr (INSEE)",
+    "communes": [
+      {
+        "nom": "Lyon",
+        "insee_code": "69123",
+        "postcodes": [
+          "69001",
+          "69002",
+          "69003",
+          "69004",
+          "69005",
+          "69006",
+          "69007",
+          "69008",
+          "69009"
+        ],
+        "departement": {
+          "code": "69",
+          "nom": "Rhône"
+        },
+        "region": {
+          "code": "84",
+          "nom": "Auvergne-Rhône-Alpes"
+        },
+        "population": 519127,
+        "surface_km2": 48,
+        "center": {
+          "lon": 4.8351,
+          "lat": 45.758
+        }
+      }
+    ]
+  },
+  "generated_from": "DVF (DGFiP/Etalab), Carte des loyers (Min. Logement/ANIL), ADEME, Géorisques, BAN, INSEE — all official French open data, queried live."
+}

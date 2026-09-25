@@ -1,0 +1,28 @@
+{
+  "name": "mcp-immo-olv-ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Local web console for the mcp-immo-olv MCP server.",
+  "scripts": {
+    "dev": "concurrently -k -n bridge,vite -c magenta,cyan \"npm:bridge\" \"vite\"",
+    "bridge": "node server/bridge.mjs",
+    "build": "tsc --noEmit && vite build",
+    "smoke": "vite build --ssr scripts/render-smoke.tsx --outDir .smoke --emptyOutDir --logLevel warn && node .smoke/render-smoke.js",
+    "preview": "vite preview",
+    "start": "node server/bridge.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.7"
+  }
+}
