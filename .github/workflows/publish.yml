@@ -1,0 +1,78 @@
+name: Publish
+
+# Publishes both artifacts from a single git tag, using OIDC only — there is no
+# long-lived secret anywhere in this workflow.
+#
+# One-time setup on npmjs.com, otherwise the npm step fails:
+#   Package mcp-immo-olv → Settings → Trusted publishing → GitHub Actions
+#     Organization or user : OlivierLAVAUD
+#     Repository           : mcp-immo-olv
+#     Workflow filename    : publish.yml
+#     Environment name     : (leave empty)
+#     Allowed actions      : allow "npm publish" (not only staged publishes)
+#
+# The MCP Registry side needs no configuration: `login github-oidc` verifies the
+# GitHub Actions OIDC token, which is why the server name lives in the
+# io.github.OlivierLAVAUD/ namespace.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required by both OIDC exchanges below
+
+jobs:
+  publish:
+    name: npm + MCP Registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 24 ships an npm new enough for trusted publishing
+      # (requires npm >= 11.5.1 and Node >= 22.14.0).
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false # never cache in a release build
+
+      - name: Check the tag against package.json and server.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          srv="$(node -p "require('./server.json').version")"
+          echo "tag=$tag  package.json=$pkg  server.json=$srv"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag v$tag does not match package.json version $pkg"
+            exit 1
+          fi
+          if [ "$tag" != "$srv" ]; then
+            echo "::error::tag v$tag does not match server.json version $srv"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Publish to npm
+        run: npm publish
+
+      - name: Install mcp-publisher
+        run: |
+          curl -sSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Authenticate to the MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to the MCP Registry
+        run: ./mcp-publisher publish

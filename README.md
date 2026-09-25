@@ -45,6 +45,22 @@ Exemple de configuration générique :
 }
 ```
 
+## Installer depuis le registre MCP
+
+Le serveur est référencé dans le registre officiel MCP sous le nom :
+
+**`io.github.OlivierLAVAUD/mcp-immo`**
+
+Un client capable de résoudre un serveur depuis le registre le trouve par ce
+nom, sans clé API ni compte à créer. Le registre ne stocke que les métadonnées :
+le serveur tourne en local, en `stdio`, et se lance depuis le paquet npm
+`mcp-immo-olv`. La configuration manuelle ci-dessus reste équivalente.
+
+```bash
+# Vérifier la fiche publiée
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.OlivierLAVAUD%2Fmcp-immo"
+```
+
 ## Outils
 
 | Outil | Résultat | Source |

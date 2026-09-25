@@ -1,0 +1,31 @@
+name: Smoke
+
+# Deliberately not part of CI: this job queries live public open-data endpoints,
+# so it fails on upstream outages rather than on our own code. Running it on a
+# schedule still catches upstream schema changes early enough to react.
+on:
+  schedule:
+    # Mondays, 06:00 UTC.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Live end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Smoke against the live public APIs
+        run: npm run smoke
