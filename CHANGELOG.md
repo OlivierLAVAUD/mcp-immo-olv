@@ -1,5 +1,77 @@
 # Changelog
 
+## 1.0.3 — 2026-09-25
+
+### Fixed
+
+- **An unreachable Géorisques no longer reads as "no risk".** The ministry's
+  API answers HTTP 503 during whole-site incidents, and `natural_risks`
+  surfaced that as a hard failure while `property_report` reported its `risks`
+  section as an error. The client now degrades explicitly — `available: false`,
+  the reason, and a link to the official portal — and the handler states that
+  the status at that address is **unknown**, not absent. A 4xx still throws,
+  because that means the request itself was wrong.
+
+### Added
+
+- `available` on the risk report, so a client can tell "nothing is known" from
+  "nothing was found" without parsing prose.
+- Continuous integration: build and unit tests on Node 18, 20, 22 and 24, plus
+  a build of the local console.
+- A scheduled live smoke job (Mondays) covering every tool end to end, and a
+  tag-triggered release workflow publishing to npm and the MCP registry through
+  OIDC, with no stored token.
+
+### Changed
+
+- The live smoke test counts `available: false` as a failure, so an upstream
+  outage keeps showing up in CI instead of passing quietly; the console renders
+  a warning rather than "aucun risque signalé à cette adresse".
+
+## 1.0.2 — 2026-09-25
+
+### Added
+
+- **Published to the official MCP registry** as
+  `io.github.OlivierLAVAUD/mcp-immo`, so a client that resolves servers from the
+  registry finds it by name. The registry proves package ownership through an
+  `mcpName` marker, which `package.json` now carries.
+
+### Changed
+
+- `server.json` migrated to the current registry schema (`2025-12-11`):
+  camelCase `registryType`, a `repository` object in place of `repositoryUrl`,
+  and a description trimmed to the registry's 100-character limit.
+
+## 1.0.1 — 2026-09-25
+
+### Fixed
+
+- **The version identifiers had drifted apart**: `package.json` said 1.0.0 while
+  `src/version.ts` and `server.json` still said 0.5.1, so every published build
+  advertised a stale version in its HTTP `User-Agent`. The four now move
+  together, and the release workflow refuses to publish when they disagree.
+
+### Changed
+
+- `LICENSE` reduced to the project's own copyright notice.
+
+## 1.0.0 — 2026-09-15
+
+### Notes
+
+- **No functional change over 0.5.1.** Comparing the published tarballs, only
+  the version field and the README introduction differ; `dist/` is
+  byte-identical to 0.5.1.
+
+## 0.6.0 — 2026-09-15
+
+### Notes
+
+- Version bump only: identical to 0.5.1. Never published to npm, no longer
+  tagged, superseded by 1.0.0 the same day. The 0.5.2 bump in between has the
+  same status.
+
 ## 0.5.1 — 2026-09-15
 
 ### Changed
