@@ -1,0 +1,16 @@
+{
+  "name": "mcp-immo-olv",
+  "description": "Le serveur MCP mcp-immo-olv distribué comme plugin Claude Code : données immobilières françaises issues de l'open data public.",
+  "owner": {
+    "name": "Olivier LAVAUD",
+    "email": "olivier.lavaud@gmail.com",
+    "url": "https://github.com/OlivierLAVAUD"
+  },
+  "plugins": [
+    {
+      "name": "immo-olv",
+      "source": ".",
+      "description": "Interroge ventes notariées, estimations, loyers, taxe foncière, DPE, risques et urbanisme à partir d'une simple adresse. 16 outils MCP, aucune clé API."
+    }
+  ]
+}

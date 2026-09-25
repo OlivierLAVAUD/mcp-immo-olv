@@ -35,6 +35,38 @@ jobs:
       - name: Unit tests
         run: npm test
 
+  plugin:
+    name: Validate the Claude Code plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      # The plugin ships from this repository, so its manifests are part of the
+      # release surface and are validated with the official CLI.
+      - name: Validate the manifests
+        # A pinned C locale keeps the third-party CLI output unlocalized, so the
+        # logs stay readable whatever the runner's language is.
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+        run: npx --yes @anthropic-ai/claude-code@latest plugin validate . --strict
+
+      - name: Check the plugin version against package.json
+        run: |
+          set -euo pipefail
+          pkg="$(node -p "require('./package.json').version")"
+          plug="$(node -p "require('./.claude-plugin/plugin.json').version")"
+          echo "package.json=$pkg  plugin.json=$plug"
+          if [ "$pkg" != "$plug" ]; then
+            echo "::error::.claude-plugin/plugin.json version $plug does not match package.json version $pkg"
+            exit 1
+          fi
+
   ui:
     name: Build the console
     runs-on: ubuntu-latest

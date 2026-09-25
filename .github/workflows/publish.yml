@@ -38,20 +38,25 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false # never cache in a release build
 
-      - name: Check the tag against package.json and server.json
+      - name: Check the tag against package.json, server.json and the plugin manifest
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
           pkg="$(node -p "require('./package.json').version")"
           srv="$(node -p "require('./server.json').version")"
-          echo "tag=$tag  package.json=$pkg  server.json=$srv"
+          plug="$(node -p "require('./.claude-plugin/plugin.json').version")"
+          echo "tag=$tag  package.json=$pkg  server.json=$srv  plugin.json=$plug"
           if [ "$tag" != "$pkg" ]; then
             echo "::error::tag v$tag does not match package.json version $pkg"
             exit 1
           fi
           if [ "$tag" != "$srv" ]; then
             echo "::error::tag v$tag does not match server.json version $srv"
+            exit 1
+          fi
+          if [ "$tag" != "$plug" ]; then
+            echo "::error::tag v$tag does not match .claude-plugin/plugin.json version $plug"
             exit 1
           fi
 
@@ -63,6 +68,15 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      # The plugin is fetched from GitHub: a release whose manifest is invalid or
+      # out of sync would pin Claude Code users to a broken version.
+      - name: Validate the Claude Code plugin manifests
+        # Pinned locale: the CLI is third-party, its messages stay unlocalized.
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+        run: npx --yes @anthropic-ai/claude-code@latest plugin validate . --strict
 
       - name: Publish to npm
         run: npm publish

@@ -61,6 +61,36 @@ le serveur tourne en local, en `stdio`, et se lance depuis le paquet npm
 curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.OlivierLAVAUD%2Fmcp-immo"
 ```
 
+## Installer en plugin Claude Code
+
+Le dépôt est aussi un marketplace de plugins Claude Code. Deux commandes
+suffisent, sans clé API :
+
+```bash
+claude plugin marketplace add OlivierLAVAUD/mcp-immo-olv
+claude plugin install immo-olv@mcp-immo-olv
+```
+
+Le plugin `immo-olv` lance le serveur MCP en `stdio` via
+`npx -y mcp-immo-olv@latest`, et ajoute trois commandes qui pré-câblent les
+appels d'outils :
+
+| Commande | Ce qu'elle produit |
+|---|---|
+| `/immo-olv:rapport <adresse>` | Dossier complet sur une adresse |
+| `/immo-olv:estimation <adresse> <type> <surface>` | Estimation par comparables et fiabilité mesurée du modèle |
+| `/immo-olv:risques <adresse>` | Risques, urbanisme et cadastre |
+
+Un skill de cadrage (`immobilier-france`) accompagne les outils : il impose de
+citer la source de chaque chiffre, de ne jamais inventer une donnée, et de
+traiter un risque `available: false` comme **inconnu** et non comme absent.
+
+Sous Windows natif, si `npx` n'est pas résolu, déclare le serveur à la main :
+
+```bash
+claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
+```
+
 ## Outils
 
 | Outil | Résultat | Source |

@@ -1,0 +1,25 @@
+{
+  "name": "immo-olv",
+  "displayName": "Immo France (open data)",
+  "version": "1.0.3",
+  "description": "Données immobilières françaises en open data : ventes notariées DVF, estimation par comparables, loyers, taxe foncière, DPE, risques, PLU, cadastre et IRIS. Sans clé API.",
+  "author": {
+    "name": "Olivier LAVAUD",
+    "email": "olivier.lavaud@gmail.com",
+    "url": "https://github.com/OlivierLAVAUD"
+  },
+  "homepage": "https://github.com/OlivierLAVAUD/mcp-immo-olv#readme",
+  "repository": "https://github.com/OlivierLAVAUD/mcp-immo-olv",
+  "license": "MIT",
+  "keywords": [
+    "immobilier",
+    "france",
+    "dvf",
+    "open-data",
+    "estimation",
+    "dpe",
+    "georisques",
+    "urbanisme",
+    "mcp"
+  ]
+}

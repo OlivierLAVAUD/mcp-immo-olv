@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "immo-olv": {
+      "command": "npx",
+      "args": ["-y", "mcp-immo-olv@latest"]
+    }
+  }
+}
