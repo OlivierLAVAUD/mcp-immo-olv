@@ -1,6 +1,6 @@
 {
   "name": "mcp-immo-olv",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "French real-estate intelligence MCP: notarized sale prices (DVF), transparent comparables valuations, official rent indicators, average property-tax context, DPE, natural risks and commune data. No API keys.",
   "mcpName": "io.github.OlivierLAVAUD/mcp-immo",
   "license": "MIT",
@@ -26,6 +26,9 @@
     "build": "tsc",
     "test": "vitest run",
     "smoke": "npm run build && node scripts/smoke.mjs",
+    "dev": "npm --prefix ui run dev",
+    "ui:build": "npm --prefix ui run build",
+    "ui:start": "npm --prefix ui run start",
     "prepublishOnly": "npm run build && npm test"
   },
   "engines": {
