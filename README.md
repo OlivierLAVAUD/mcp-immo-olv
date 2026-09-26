@@ -28,7 +28,6 @@ Pour un client MCP compatible stdio après publication du paquet sous votre
 compte npm :
 
 ```bash
-# Remplacez le nom si vous publiez sous un scope npm.
 npx -y mcp-immo-olv
 ```
 
