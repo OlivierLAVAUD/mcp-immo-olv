@@ -24,14 +24,8 @@ npm run build
 node dist/index.js
 ```
 
-Pour un client MCP compatible stdio après publication du paquet sous votre
-compte npm :
 
-```bash
-npx -y mcp-immo-olv
-```
-
-Exemple de configuration générique :
+## Installler avec la configuration générique :
 
 ```json
 {
