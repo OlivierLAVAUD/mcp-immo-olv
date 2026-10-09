@@ -23,6 +23,96 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "banId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "BAN interoperability id, citycode_streetcode_number"
+              },
+              "housenumber": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "city": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "citycode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "INSEE code, arrondissement level in Paris/Lyon/Marseille"
+              },
+              "type": {
+                "type": "string",
+                "description": "housenumber | street | locality | municipality"
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lon": {
+                "type": "number"
+              },
+              "score": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "label",
+              "banId",
+              "housenumber",
+              "street",
+              "postcode",
+              "city",
+              "citycode",
+              "type",
+              "lat",
+              "lon",
+              "score"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "source",
+        "results"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -78,6 +168,136 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_address": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            },
+            "years": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "resolved_address",
+            "scope",
+            "years"
+          ],
+          "additionalProperties": true
+        },
+        "total_matching_sales": {
+          "type": "number"
+        },
+        "sales": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": {
+                "type": "string"
+              },
+              "nature": {
+                "type": "string"
+              },
+              "price_eur": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dwellings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "surface": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "rooms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "surface",
+                    "rooms"
+                  ],
+                  "additionalProperties": true
+                }
+              },
+              "other_locals": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "land_surface_m2": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "price_per_m2": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Set only when the deed covers exactly one dwelling"
+              }
+            },
+            "required": [
+              "date",
+              "nature",
+              "price_eur",
+              "addresses",
+              "dwellings",
+              "land_surface_m2",
+              "price_per_m2"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "total_matching_sales",
+        "sales",
+        "note"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -99,7 +319,7 @@
             "Appartement",
             "Maison"
           ],
-          "description": "Restrict to flats or houses"
+          "description": "Filter by dwelling type"
         },
         "years": {
           "type": "array",
@@ -112,13 +332,162 @@
           "type": "number",
           "minimum": 50,
           "maximum": 5000,
-          "description": "Radius in meters around the address (default 500; ignored for city-wide queries)"
+          "description": "Search radius in meters around the address (default 500; ignored for city-wide queries)"
         }
       },
       "required": [
         "address"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_address": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            },
+            "type_local": {
+              "type": "string"
+            },
+            "years": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "resolved_address",
+            "scope",
+            "type_local",
+            "years"
+          ],
+          "additionalProperties": true
+        },
+        "all_period": {
+          "type": "object",
+          "properties": {
+            "sales": {
+              "type": "number"
+            },
+            "median_eur_m2": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "mean_eur_m2": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "p25_eur_m2": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "p75_eur_m2": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "sales",
+            "median_eur_m2",
+            "mean_eur_m2",
+            "p25_eur_m2",
+            "p75_eur_m2"
+          ],
+          "additionalProperties": true
+        },
+        "last_12_months": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "sales": {
+                  "$ref": "#/properties/all_period/properties/sales"
+                },
+                "median_eur_m2": {
+                  "$ref": "#/properties/all_period/properties/median_eur_m2"
+                },
+                "mean_eur_m2": {
+                  "$ref": "#/properties/all_period/properties/mean_eur_m2"
+                },
+                "p25_eur_m2": {
+                  "$ref": "#/properties/all_period/properties/p25_eur_m2"
+                },
+                "p75_eur_m2": {
+                  "$ref": "#/properties/all_period/properties/p75_eur_m2"
+                },
+                "window": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sales",
+                "median_eur_m2",
+                "mean_eur_m2",
+                "p25_eur_m2",
+                "p75_eur_m2",
+                "window"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "by_year": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "sales": {
+                "type": "number"
+              },
+              "median_eur_m2": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "sales",
+              "median_eur_m2"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "all_period",
+        "last_12_months",
+        "by_year",
+        "note"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -164,6 +533,328 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_address": {
+              "type": "string"
+            },
+            "type_local": {
+              "type": "string"
+            },
+            "surface_m2": {
+              "type": "number"
+            },
+            "communes_searched": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "resolved_address",
+            "type_local",
+            "surface_m2",
+            "communes_searched"
+          ],
+          "additionalProperties": true
+        },
+        "estimate": {
+          "type": "object",
+          "properties": {
+            "per_m2": {
+              "type": "object",
+              "properties": {
+                "estimate": {
+                  "type": "number"
+                },
+                "low": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "estimate",
+                "low",
+                "high"
+              ],
+              "additionalProperties": true
+            },
+            "value_eur": {
+              "$ref": "#/properties/estimate/properties/per_m2"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "high",
+                "medium",
+                "low"
+              ]
+            },
+            "comps_used": {
+              "type": "number"
+            },
+            "effective_sample_size": {
+              "type": "number",
+              "description": "Kish effective size: (Σw)²/Σw²"
+            },
+            "reference_year": {
+              "type": "number"
+            },
+            "year_medians_eur_m2": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            },
+            "top_comps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "distance_m": {
+                    "type": "number"
+                  },
+                  "surface_m2": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "rooms": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "price_eur": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "price_m2": {
+                    "type": "number"
+                  },
+                  "price_m2_adjusted": {
+                    "type": "number",
+                    "description": "Comp price expressed at current market level"
+                  },
+                  "year_adjustment": {
+                    "type": "number"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "description": "Share of the heaviest comp's weight (1 = the heaviest)"
+                  }
+                },
+                "required": [
+                  "date",
+                  "address",
+                  "distance_m",
+                  "surface_m2",
+                  "rooms",
+                  "price_eur",
+                  "price_m2",
+                  "price_m2_adjusted",
+                  "year_adjustment",
+                  "weight"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "per_m2",
+            "value_eur",
+            "confidence",
+            "comps_used",
+            "effective_sample_size",
+            "reference_year",
+            "year_medians_eur_m2",
+            "top_comps"
+          ],
+          "additionalProperties": true
+        },
+        "rental": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "indicator": {
+                  "type": "string",
+                  "enum": [
+                    "apartment",
+                    "apartment_1_2_rooms",
+                    "apartment_3plus_rooms",
+                    "house"
+                  ]
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "rent_eur_m2_month": {
+                  "type": "number"
+                },
+                "range_eur_m2_month": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "estimated_monthly_rent_eur": {
+                  "type": "number"
+                },
+                "gross_yield_pct": {
+                  "type": "number"
+                },
+                "property_tax_average": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "source_url": {
+                      "type": "string"
+                    },
+                    "insee_code": {
+                      "type": "string"
+                    },
+                    "year": {
+                      "type": "number"
+                    },
+                    "typical_annual_charge_eur": {
+                      "type": "number",
+                      "description": "Average charge per taxable article in the commune, not an individual tax bill"
+                    },
+                    "components": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "amount_eur": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "taxable_articles": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "average_charge_eur": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "label",
+                          "amount_eur",
+                          "taxable_articles",
+                          "average_charge_eur"
+                        ],
+                        "additionalProperties": true
+                      }
+                    },
+                    "coverage": {
+                      "type": "string",
+                      "enum": [
+                        "complete",
+                        "partial"
+                      ]
+                    },
+                    "caveats": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "source_url",
+                    "insee_code",
+                    "year",
+                    "typical_annual_charge_eur",
+                    "components",
+                    "coverage",
+                    "caveats"
+                  ],
+                  "additionalProperties": true
+                },
+                "net_yield_after_average_property_tax_pct": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "source",
+                "indicator",
+                "scope",
+                "rent_eur_m2_month",
+                "range_eur_m2_month",
+                "estimated_monthly_rent_eur",
+                "gross_yield_pct"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "estimate",
+        "rental",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -188,6 +879,83 @@
         "location"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "insee_code": {
+          "type": "string"
+        },
+        "year": {
+          "type": "number"
+        },
+        "indicators": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "rent_eur_m2_month": {
+                    "type": "number"
+                  },
+                  "range_eur_m2_month": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "scope": {
+                    "type": "string"
+                  },
+                  "listings_observed": {
+                    "type": "number"
+                  },
+                  "estimated_monthly_rent_eur": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "rent_eur_m2_month",
+                  "range_eur_m2_month",
+                  "scope",
+                  "listings_observed"
+                ],
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "location",
+        "insee_code",
+        "year",
+        "indicators",
+        "note"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -218,6 +986,109 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_location": {
+              "type": "string"
+            },
+            "insee_code": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "resolved_location",
+            "insee_code"
+          ],
+          "additionalProperties": true
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "insee_code": {
+          "type": "string"
+        },
+        "year": {
+          "type": "number"
+        },
+        "typical_annual_charge_eur": {
+          "type": "number",
+          "description": "Average charge per taxable article in the commune, not an individual tax bill"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "amount_eur": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "taxable_articles": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "average_charge_eur": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "label",
+              "amount_eur",
+              "taxable_articles",
+              "average_charge_eur"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "query",
+        "source",
+        "source_url",
+        "insee_code",
+        "year",
+        "typical_annual_charge_eur",
+        "components",
+        "coverage",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -225,20 +1096,30 @@
   {
     "name": "property_report",
     "title": "Full property due-diligence report",
-    "description": "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators and an aggregate taxe foncière proxy — plus a comparables-based valuation, gross yield and yield after average property tax when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property.",
+    "description": "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators and an aggregate taxe foncière proxy — plus a comparables-based valuation, gross yield and yield after average property tax when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property. Pass `addresses` (2 to 5) instead of `address` to dossier several neighbourhoods in one call; each report is isolated, so one bad address returns its own error without sinking the batch.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "address": {
           "type": "string",
-          "description": "Address in France"
+          "description": "Address in France (mutually exclusive with `addresses`)"
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 5,
+          "description": "2 to 5 addresses to dossier in one call, for comparing neighbourhoods (mutually exclusive with `address`)"
         },
         "type_local": {
           "type": "string",
           "enum": [
             "Appartement",
             "Maison"
-          ]
+          ],
+          "description": "Filter by dwelling type"
         },
         "surface_m2": {
           "type": "number",
@@ -249,12 +1130,2018 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 20
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "markdown"
+          ],
+          "description": "Answer shape: 'json' (default, structured dossier) or 'markdown' (same dossier rendered as shareable Markdown)"
         }
       },
-      "required": [
-        "address"
-      ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "markdown"
+          ]
+        },
+        "content": {
+          "type": "string",
+          "description": "Rendered Markdown dossier, present when format is 'markdown'"
+        },
+        "resolved_address": {
+          "type": "string"
+        },
+        "market": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "query": {
+                  "type": "object",
+                  "properties": {
+                    "resolved_address": {
+                      "type": "string"
+                    },
+                    "scope": {
+                      "type": "string"
+                    },
+                    "type_local": {
+                      "type": "string"
+                    },
+                    "years": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "required": [
+                    "resolved_address",
+                    "scope",
+                    "type_local",
+                    "years"
+                  ],
+                  "additionalProperties": true
+                },
+                "all_period": {
+                  "type": "object",
+                  "properties": {
+                    "sales": {
+                      "type": "number"
+                    },
+                    "median_eur_m2": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "mean_eur_m2": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "p25_eur_m2": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "p75_eur_m2": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sales",
+                    "median_eur_m2",
+                    "mean_eur_m2",
+                    "p25_eur_m2",
+                    "p75_eur_m2"
+                  ],
+                  "additionalProperties": true
+                },
+                "last_12_months": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "sales": {
+                          "$ref": "#/properties/market/anyOf/0/properties/all_period/properties/sales"
+                        },
+                        "median_eur_m2": {
+                          "$ref": "#/properties/market/anyOf/0/properties/all_period/properties/median_eur_m2"
+                        },
+                        "mean_eur_m2": {
+                          "$ref": "#/properties/market/anyOf/0/properties/all_period/properties/mean_eur_m2"
+                        },
+                        "p25_eur_m2": {
+                          "$ref": "#/properties/market/anyOf/0/properties/all_period/properties/p25_eur_m2"
+                        },
+                        "p75_eur_m2": {
+                          "$ref": "#/properties/market/anyOf/0/properties/all_period/properties/p75_eur_m2"
+                        },
+                        "window": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "sales",
+                        "median_eur_m2",
+                        "mean_eur_m2",
+                        "p25_eur_m2",
+                        "p75_eur_m2",
+                        "window"
+                      ],
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "by_year": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "sales": {
+                        "type": "number"
+                      },
+                      "median_eur_m2": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sales",
+                      "median_eur_m2"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "query",
+                "all_period",
+                "last_12_months",
+                "by_year",
+                "note"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "recent_sales_nearby": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "query": {
+                  "type": "object",
+                  "properties": {
+                    "resolved_address": {
+                      "type": "string"
+                    },
+                    "scope": {
+                      "type": "string"
+                    },
+                    "years": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "required": [
+                    "resolved_address",
+                    "scope",
+                    "years"
+                  ],
+                  "additionalProperties": true
+                },
+                "total_matching_sales": {
+                  "type": "number"
+                },
+                "sales": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string"
+                      },
+                      "nature": {
+                        "type": "string"
+                      },
+                      "price_eur": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "addresses": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "dwellings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "surface": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "rooms": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "surface",
+                            "rooms"
+                          ],
+                          "additionalProperties": true
+                        }
+                      },
+                      "other_locals": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "land_surface_m2": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "price_per_m2": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "description": "Set only when the deed covers exactly one dwelling"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "nature",
+                      "price_eur",
+                      "addresses",
+                      "dwellings",
+                      "land_surface_m2",
+                      "price_per_m2"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "query",
+                "total_matching_sales",
+                "sales",
+                "note"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "valuation": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "object",
+                      "properties": {
+                        "resolved_address": {
+                          "type": "string"
+                        },
+                        "type_local": {
+                          "type": "string"
+                        },
+                        "surface_m2": {
+                          "type": "number"
+                        },
+                        "communes_searched": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "resolved_address",
+                        "type_local",
+                        "surface_m2",
+                        "communes_searched"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "estimate": {
+                      "type": "object",
+                      "properties": {
+                        "per_m2": {
+                          "type": "object",
+                          "properties": {
+                            "estimate": {
+                              "type": "number"
+                            },
+                            "low": {
+                              "type": "number"
+                            },
+                            "high": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "estimate",
+                            "low",
+                            "high"
+                          ],
+                          "additionalProperties": true
+                        },
+                        "value_eur": {
+                          "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/estimate/properties/per_m2"
+                        },
+                        "confidence": {
+                          "type": "string",
+                          "enum": [
+                            "high",
+                            "medium",
+                            "low"
+                          ]
+                        },
+                        "comps_used": {
+                          "type": "number"
+                        },
+                        "effective_sample_size": {
+                          "type": "number",
+                          "description": "Kish effective size: (Σw)²/Σw²"
+                        },
+                        "reference_year": {
+                          "type": "number"
+                        },
+                        "year_medians_eur_m2": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "number"
+                          }
+                        },
+                        "top_comps": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string"
+                              },
+                              "address": {
+                                "type": "string"
+                              },
+                              "distance_m": {
+                                "type": "number"
+                              },
+                              "surface_m2": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "rooms": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "price_eur": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "price_m2": {
+                                "type": "number"
+                              },
+                              "price_m2_adjusted": {
+                                "type": "number",
+                                "description": "Comp price expressed at current market level"
+                              },
+                              "year_adjustment": {
+                                "type": "number"
+                              },
+                              "weight": {
+                                "type": "number",
+                                "description": "Share of the heaviest comp's weight (1 = the heaviest)"
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "address",
+                              "distance_m",
+                              "surface_m2",
+                              "rooms",
+                              "price_eur",
+                              "price_m2",
+                              "price_m2_adjusted",
+                              "year_adjustment",
+                              "weight"
+                            ],
+                            "additionalProperties": true
+                          }
+                        }
+                      },
+                      "required": [
+                        "per_m2",
+                        "value_eur",
+                        "confidence",
+                        "comps_used",
+                        "effective_sample_size",
+                        "reference_year",
+                        "year_medians_eur_m2",
+                        "top_comps"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "rental": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "source": {
+                              "type": "string"
+                            },
+                            "indicator": {
+                              "type": "string",
+                              "enum": [
+                                "apartment",
+                                "apartment_1_2_rooms",
+                                "apartment_3plus_rooms",
+                                "house"
+                              ]
+                            },
+                            "scope": {
+                              "type": "string"
+                            },
+                            "rent_eur_m2_month": {
+                              "type": "number"
+                            },
+                            "range_eur_m2_month": {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ]
+                            },
+                            "estimated_monthly_rent_eur": {
+                              "type": "number"
+                            },
+                            "gross_yield_pct": {
+                              "type": "number"
+                            },
+                            "property_tax_average": {
+                              "type": "object",
+                              "properties": {
+                                "source": {
+                                  "type": "string"
+                                },
+                                "source_url": {
+                                  "type": "string"
+                                },
+                                "insee_code": {
+                                  "type": "string"
+                                },
+                                "year": {
+                                  "type": "number"
+                                },
+                                "typical_annual_charge_eur": {
+                                  "type": "number",
+                                  "description": "Average charge per taxable article in the commune, not an individual tax bill"
+                                },
+                                "components": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "code": {
+                                        "type": "string"
+                                      },
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "amount_eur": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      },
+                                      "taxable_articles": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      },
+                                      "average_charge_eur": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "code",
+                                      "label",
+                                      "amount_eur",
+                                      "taxable_articles",
+                                      "average_charge_eur"
+                                    ],
+                                    "additionalProperties": true
+                                  }
+                                },
+                                "coverage": {
+                                  "type": "string",
+                                  "enum": [
+                                    "complete",
+                                    "partial"
+                                  ]
+                                },
+                                "caveats": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "source",
+                                "source_url",
+                                "insee_code",
+                                "year",
+                                "typical_annual_charge_eur",
+                                "components",
+                                "coverage",
+                                "caveats"
+                              ],
+                              "additionalProperties": true
+                            },
+                            "net_yield_after_average_property_tax_pct": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "indicator",
+                            "scope",
+                            "rent_eur_m2_month",
+                            "range_eur_m2_month",
+                            "estimated_monthly_rent_eur",
+                            "gross_yield_pct"
+                          ],
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "caveats": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "query",
+                    "estimate",
+                    "rental",
+                    "caveats"
+                  ],
+                  "additionalProperties": true
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rent": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "insee_code": {
+                  "type": "string"
+                },
+                "year": {
+                  "type": "number"
+                },
+                "indicators": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "rent_eur_m2_month": {
+                            "type": "number"
+                          },
+                          "range_eur_m2_month": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number"
+                              }
+                            ]
+                          },
+                          "scope": {
+                            "type": "string"
+                          },
+                          "listings_observed": {
+                            "type": "number"
+                          },
+                          "estimated_monthly_rent_eur": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "rent_eur_m2_month",
+                          "range_eur_m2_month",
+                          "scope",
+                          "listings_observed"
+                        ],
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "location",
+                "insee_code",
+                "year",
+                "indicators",
+                "note"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "rent_control": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "object",
+                  "properties": {
+                    "resolved_address": {
+                      "type": "string"
+                    },
+                    "insee_code": {
+                      "type": "string"
+                    },
+                    "iris_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "rooms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "furnished": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "period": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "resolved_address",
+                    "insee_code",
+                    "iris_code",
+                    "rooms",
+                    "furnished",
+                    "period"
+                  ],
+                  "additionalProperties": true
+                },
+                "covered": {
+                  "type": "boolean"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "area_label": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "year": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rooms": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "period": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "furnished": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "values": {
+                  "type": "object",
+                  "properties": {
+                    "reference_eur_m2_month": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "ceiling_eur_m2_month": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Loyer de référence majoré: a legal ceiling"
+                    },
+                    "floor_eur_m2_month": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "reference_eur_m2_month",
+                    "ceiling_eur_m2_month",
+                    "floor_eur_m2_month"
+                  ],
+                  "additionalProperties": true
+                },
+                "matched": {
+                  "type": "string",
+                  "enum": [
+                    "exact",
+                    "closest"
+                  ]
+                },
+                "source": {
+                  "type": "string"
+                },
+                "source_url": {
+                  "type": "string"
+                },
+                "covered_cities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "note": {
+                  "type": "string"
+                },
+                "caveats": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "query",
+                "covered",
+                "source",
+                "note"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "property_tax": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "object",
+                  "properties": {
+                    "resolved_location": {
+                      "type": "string"
+                    },
+                    "insee_code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "resolved_location",
+                    "insee_code"
+                  ],
+                  "additionalProperties": true
+                },
+                "source": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/source"
+                },
+                "source_url": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/source_url"
+                },
+                "insee_code": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/insee_code"
+                },
+                "year": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/year"
+                },
+                "typical_annual_charge_eur": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/typical_annual_charge_eur"
+                },
+                "components": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/components"
+                },
+                "coverage": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/coverage"
+                },
+                "caveats": {
+                  "$ref": "#/properties/valuation/anyOf/0/anyOf/0/properties/rental/anyOf/0/properties/property_tax_average/properties/caveats"
+                }
+              },
+              "required": [
+                "query",
+                "source",
+                "source_url",
+                "insee_code",
+                "year",
+                "typical_annual_charge_eur",
+                "components",
+                "coverage",
+                "caveats"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "cadastre": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "source_url": {
+                  "type": "string"
+                },
+                "resolved_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "point": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lon": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "lat",
+                    "lon"
+                  ],
+                  "additionalProperties": true
+                },
+                "parcels_found": {
+                  "type": "number"
+                },
+                "parcels": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "idu": {
+                        "type": "string",
+                        "description": "Unique cadastral id quoted on deeds, e.g. 69382000AB0062"
+                      },
+                      "section": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "numero": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "contenance_m2": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "description": "Cadastral taxed area of the whole parcel, land included — not habitable surface"
+                      },
+                      "code_insee": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "commune": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "com_abs": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "approx_center": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/properties/cadastre/anyOf/0/properties/point"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "bbox": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "minItems": 4,
+                            "maxItems": 4,
+                            "items": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "idu",
+                      "section",
+                      "numero",
+                      "contenance_m2",
+                      "code_insee",
+                      "commune",
+                      "com_abs",
+                      "approx_center",
+                      "bbox"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "note": {
+                  "type": "string"
+                },
+                "caveats": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "source",
+                "source_url",
+                "resolved_address",
+                "point",
+                "parcels_found",
+                "parcels",
+                "note",
+                "caveats"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "urbanism": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "source_url": {
+                  "type": "string"
+                },
+                "resolved_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "point": {
+                  "$ref": "#/properties/cadastre/anyOf/0/properties/point"
+                },
+                "zoning_areas": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "description": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "type": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "U urban, AU to be urbanised, A agricultural, N natural"
+                      },
+                      "partition": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "document_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "document_valid_from": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "regulation_file": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "document_url": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "description",
+                      "type",
+                      "partition",
+                      "document_id",
+                      "document_valid_from",
+                      "regulation_file",
+                      "document_url"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "prescriptions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "type_code": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "subtype_code": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "geometry_kind": {
+                        "type": "string",
+                        "enum": [
+                          "surf",
+                          "lin",
+                          "pct"
+                        ]
+                      },
+                      "value": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "document_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "document_valid_from": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "regulation_file": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "type_code",
+                      "subtype_code",
+                      "geometry_kind",
+                      "value",
+                      "document_id",
+                      "document_valid_from",
+                      "regulation_file"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "coverage_note": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                },
+                "caveats": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "source",
+                "source_url",
+                "resolved_address",
+                "point",
+                "zoning_areas",
+                "prescriptions",
+                "note",
+                "caveats"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "iris": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "source_url": {
+                  "type": "string"
+                },
+                "resolved_address": {
+                  "type": "string"
+                },
+                "point": {
+                  "$ref": "#/properties/cadastre/anyOf/0/properties/point"
+                },
+                "iris": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code_iris": {
+                          "type": "string",
+                          "description": "9-character INSEE IRIS code, commune code plus 4 digits"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "code_insee": {
+                          "type": "string"
+                        },
+                        "commune": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "code_iris",
+                        "name",
+                        "type",
+                        "code_insee",
+                        "commune"
+                      ],
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "note": {
+                  "type": "string"
+                },
+                "caveats": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "source",
+                "source_url",
+                "resolved_address",
+                "point",
+                "iris",
+                "note",
+                "caveats"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "energy_diagnostics": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "query": {
+                  "type": "object",
+                  "properties": {
+                    "resolved_address": {
+                      "type": "string"
+                    },
+                    "ban_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "resolved_address",
+                    "ban_id"
+                  ],
+                  "additionalProperties": true
+                },
+                "total_found": {
+                  "type": "number"
+                },
+                "by_dataset": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dataset": {
+                        "type": "string",
+                        "enum": [
+                          "existant",
+                          "neuf"
+                        ]
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "match": {
+                        "type": "string",
+                        "enum": [
+                          "exact BAN id",
+                          "address search"
+                        ]
+                      },
+                      "total_found": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "dataset",
+                      "label",
+                      "match",
+                      "total_found"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "diagnostics": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "adresse_ban": {
+                        "type": "string"
+                      },
+                      "identifiant_ban": {
+                        "type": "string"
+                      },
+                      "etiquette_dpe": {
+                        "type": "string",
+                        "description": "Energy label, A best to G worst"
+                      },
+                      "etiquette_ges": {
+                        "type": "string",
+                        "description": "Greenhouse-gas label"
+                      },
+                      "type_batiment": {
+                        "type": "string"
+                      },
+                      "annee_construction": {
+                        "type": "number"
+                      },
+                      "surface_habitable_logement": {
+                        "type": "number"
+                      },
+                      "date_etablissement_dpe": {
+                        "type": "string"
+                      },
+                      "conso_5_usages_par_m2_ep": {
+                        "type": "number",
+                        "description": "Primary energy, kWh/m²/year"
+                      },
+                      "dataset": {
+                        "type": "string",
+                        "enum": [
+                          "existant",
+                          "neuf"
+                        ]
+                      },
+                      "rental_compliance": {
+                        "type": "object",
+                        "properties": {
+                          "energy_label": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "description": "Normalized DPE label used for the ruling"
+                          },
+                          "rental_status": {
+                            "type": "string",
+                            "enum": [
+                              "louable",
+                              "bientot_interdit",
+                              "interdit",
+                              "inconnu"
+                            ],
+                            "description": "Legal status of a main-residence lease at this label; inconnu = label missing, not lettable"
+                          },
+                          "ban_date": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "description": "First day a new lease is unlawful (ISO), null when none is dated"
+                          },
+                          "is_passoire_thermique": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "energy_label",
+                          "rental_status",
+                          "ban_date",
+                          "is_passoire_thermique"
+                        ],
+                        "additionalProperties": true
+                      },
+                      "annual_energy_cost": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "conso_kwh_year": {
+                                "type": "number",
+                                "description": "Annual primary energy from the DPE figure"
+                              },
+                              "energy_price_eur_kwh": {
+                                "type": "number"
+                              },
+                              "annual_cost_eur": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "conso_kwh_year",
+                              "energy_price_eur_kwh",
+                              "annual_cost_eur"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "query",
+                "total_found",
+                "by_dataset",
+                "diagnostics",
+                "note"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "risks": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "resolved_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "available": {
+                  "type": "boolean",
+                  "description": "false means Géorisques could not be reached: the risk status is UNKNOWN, not risk-free"
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "commune": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "naturalRisks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "risk": {
+                        "type": "string"
+                      },
+                      "statusAtAddress": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "statusInCommune": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "risk",
+                      "statusAtAddress",
+                      "statusInCommune"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "technologicalRisks": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/properties/risks/anyOf/0/properties/naturalRisks/items"
+                  }
+                },
+                "officialReportUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "unavailable": {
+                  "type": "object",
+                  "properties": {
+                    "reason": {
+                      "type": "string"
+                    },
+                    "portal_url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "reason",
+                    "portal_url"
+                  ],
+                  "additionalProperties": true
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "resolved_address",
+                "available",
+                "address",
+                "commune",
+                "naturalRisks",
+                "technologicalRisks",
+                "officialReportUrl",
+                "note"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "commune": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "communes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "nom": {
+                        "type": "string"
+                      },
+                      "insee_code": {
+                        "type": "string"
+                      },
+                      "postcodes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "departement": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "nom"
+                        ],
+                        "additionalProperties": true
+                      },
+                      "region": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "nom"
+                        ],
+                        "additionalProperties": true
+                      },
+                      "population": {
+                        "type": "number"
+                      },
+                      "surface_km2": {
+                        "type": "number"
+                      },
+                      "center": {
+                        "$ref": "#/properties/cadastre/anyOf/0/properties/point"
+                      }
+                    },
+                    "required": [
+                      "nom",
+                      "insee_code"
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "required": [
+                "source",
+                "communes"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ],
+              "additionalProperties": true
+            }
+          ]
+        },
+        "generated_from": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "addresses_count": {
+              "type": "number"
+            },
+            "type_local": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "surface_m2": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "rooms": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "addresses_count",
+            "type_local",
+            "surface_m2",
+            "rooms"
+          ],
+          "additionalProperties": true,
+          "description": "Present in the batch form: the shared profile applied to every address"
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "$ref": "#/properties/format"
+              },
+              "content": {
+                "$ref": "#/properties/content"
+              },
+              "resolved_address": {
+                "$ref": "#/properties/resolved_address"
+              },
+              "market": {
+                "$ref": "#/properties/market"
+              },
+              "recent_sales_nearby": {
+                "$ref": "#/properties/recent_sales_nearby"
+              },
+              "valuation": {
+                "$ref": "#/properties/valuation"
+              },
+              "rent": {
+                "$ref": "#/properties/rent"
+              },
+              "rent_control": {
+                "$ref": "#/properties/rent_control"
+              },
+              "property_tax": {
+                "$ref": "#/properties/property_tax"
+              },
+              "cadastre": {
+                "$ref": "#/properties/cadastre"
+              },
+              "urbanism": {
+                "$ref": "#/properties/urbanism"
+              },
+              "iris": {
+                "$ref": "#/properties/iris"
+              },
+              "energy_diagnostics": {
+                "$ref": "#/properties/energy_diagnostics"
+              },
+              "risks": {
+                "$ref": "#/properties/risks"
+              },
+              "commune": {
+                "$ref": "#/properties/commune"
+              },
+              "generated_from": {
+                "$ref": "#/properties/generated_from"
+              },
+              "input_address": {
+                "type": "string",
+                "description": "The address as requested, so a client can map each report to its input"
+              },
+              "error": {
+                "type": "string",
+                "description": "Why this address could not be dossied; the other reports are unaffected"
+              }
+            },
+            "required": [
+              "input_address"
+            ],
+            "additionalProperties": true
+          },
+          "description": "One entry per requested address, in order"
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -264,7 +3151,7 @@
   {
     "name": "dpe_lookup",
     "title": "Energy performance diagnostics (DPE)",
-    "description": "Find official energy performance certificates (DPE: energy label A-G, GES label, surface, construction year) filed for a French address. Source: ADEME open data.",
+    "description": "Find official energy performance certificates (DPE: energy label A-G, GES label, surface, construction year) filed for a French address, with the legal rental status at each label (décret n° 2024-501) and an estimated annual energy cost. Source: ADEME open data.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -286,12 +3173,209 @@
             "neuf"
           ],
           "description": "DPE register: existing dwellings (dpe03existant), new dwellings (dpe02neuf), or both (default all)"
+        },
+        "energy_price_eur_kwh": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 2,
+          "description": "Tariff assumption for the energy-cost estimate in €/kWh (default 0.2562)"
         }
       },
       "required": [
         "address"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_address": {
+              "type": "string"
+            },
+            "ban_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "resolved_address",
+            "ban_id"
+          ],
+          "additionalProperties": true
+        },
+        "total_found": {
+          "type": "number"
+        },
+        "by_dataset": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string",
+                "enum": [
+                  "existant",
+                  "neuf"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "match": {
+                "type": "string",
+                "enum": [
+                  "exact BAN id",
+                  "address search"
+                ]
+              },
+              "total_found": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "dataset",
+              "label",
+              "match",
+              "total_found"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "adresse_ban": {
+                "type": "string"
+              },
+              "identifiant_ban": {
+                "type": "string"
+              },
+              "etiquette_dpe": {
+                "type": "string",
+                "description": "Energy label, A best to G worst"
+              },
+              "etiquette_ges": {
+                "type": "string",
+                "description": "Greenhouse-gas label"
+              },
+              "type_batiment": {
+                "type": "string"
+              },
+              "annee_construction": {
+                "type": "number"
+              },
+              "surface_habitable_logement": {
+                "type": "number"
+              },
+              "date_etablissement_dpe": {
+                "type": "string"
+              },
+              "conso_5_usages_par_m2_ep": {
+                "type": "number",
+                "description": "Primary energy, kWh/m²/year"
+              },
+              "dataset": {
+                "type": "string",
+                "enum": [
+                  "existant",
+                  "neuf"
+                ]
+              },
+              "rental_compliance": {
+                "type": "object",
+                "properties": {
+                  "energy_label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Normalized DPE label used for the ruling"
+                  },
+                  "rental_status": {
+                    "type": "string",
+                    "enum": [
+                      "louable",
+                      "bientot_interdit",
+                      "interdit",
+                      "inconnu"
+                    ],
+                    "description": "Legal status of a main-residence lease at this label; inconnu = label missing, not lettable"
+                  },
+                  "ban_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "First day a new lease is unlawful (ISO), null when none is dated"
+                  },
+                  "is_passoire_thermique": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "energy_label",
+                  "rental_status",
+                  "ban_date",
+                  "is_passoire_thermique"
+                ],
+                "additionalProperties": true
+              },
+              "annual_energy_cost": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "conso_kwh_year": {
+                        "type": "number",
+                        "description": "Annual primary energy from the DPE figure"
+                      },
+                      "energy_price_eur_kwh": {
+                        "type": "number"
+                      },
+                      "annual_cost_eur": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "conso_kwh_year",
+                      "energy_price_eur_kwh",
+                      "annual_cost_eur"
+                    ],
+                    "additionalProperties": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "total_found",
+        "by_dataset",
+        "diagnostics",
+        "note"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -319,6 +3403,109 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "resolved_address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "available": {
+          "type": "boolean",
+          "description": "false means Géorisques could not be reached: the risk status is UNKNOWN, not risk-free"
+        },
+        "address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commune": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "naturalRisks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "risk": {
+                "type": "string"
+              },
+              "statusAtAddress": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "statusInCommune": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "risk",
+              "statusAtAddress",
+              "statusInCommune"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "technologicalRisks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/properties/naturalRisks/items"
+          }
+        },
+        "officialReportUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unavailable": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "portal_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "reason",
+            "portal_url"
+          ],
+          "additionalProperties": true
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "resolved_address",
+        "available",
+        "address",
+        "commune",
+        "naturalRisks",
+        "technologicalRisks",
+        "officialReportUrl",
+        "note"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -339,6 +3526,99 @@
         "query"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "communes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "nom": {
+                "type": "string"
+              },
+              "insee_code": {
+                "type": "string"
+              },
+              "postcodes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "departement": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "nom": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "nom"
+                ],
+                "additionalProperties": true
+              },
+              "region": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "nom": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "nom"
+                ],
+                "additionalProperties": true
+              },
+              "population": {
+                "type": "number"
+              },
+              "surface_km2": {
+                "type": "number"
+              },
+              "center": {
+                "type": "object",
+                "properties": {
+                  "lat": {
+                    "type": "number"
+                  },
+                  "lon": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "lat",
+                  "lon"
+                ],
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "nom",
+              "insee_code"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "source",
+        "communes"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -364,6 +3644,96 @@
         "lon"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "banId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "BAN interoperability id, citycode_streetcode_number"
+              },
+              "housenumber": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "city": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "citycode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "INSEE code, arrondissement level in Paris/Lyon/Marseille"
+              },
+              "type": {
+                "type": "string",
+                "description": "housenumber | street | locality | municipality"
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lon": {
+                "type": "number"
+              },
+              "score": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "label",
+              "banId",
+              "housenumber",
+              "street",
+              "postcode",
+              "city",
+              "citycode",
+              "type",
+              "lat",
+              "lon",
+              "score"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "source",
+        "results"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -412,6 +3782,249 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_address": {
+              "type": "string"
+            },
+            "type_local": {
+              "type": "string"
+            },
+            "communes_searched": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "from_year": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "to_year": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "resolved_address",
+            "type_local",
+            "communes_searched",
+            "from_year",
+            "to_year"
+          ],
+          "additionalProperties": true
+        },
+        "method": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "number"
+        },
+        "evaluated": {
+          "type": "number"
+        },
+        "skipped_not_estimable": {
+          "type": "number"
+        },
+        "year_range": {
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overall": {
+          "type": "object",
+          "properties": {
+            "observations": {
+              "type": "number"
+            },
+            "mape_pct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "median_ape_pct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "p90_ape_pct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "bias_pct": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Signed mean error: > 0 means the model over-estimates"
+            },
+            "interval_coverage_pct": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Share of prices inside the P25–P75 range"
+            }
+          },
+          "required": [
+            "observations",
+            "mape_pct",
+            "median_ape_pct",
+            "p90_ape_pct",
+            "bias_pct",
+            "interval_coverage_pct"
+          ],
+          "additionalProperties": true
+        },
+        "by_surface_band": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/properties/overall"
+          }
+        },
+        "by_year": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/properties/overall"
+          }
+        },
+        "worst_cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              },
+              "surface_m2": {
+                "type": "number"
+              },
+              "band": {
+                "type": "string",
+                "enum": [
+                  "lt35",
+                  "35_60",
+                  "60_90",
+                  "90_140",
+                  "gte140"
+                ]
+              },
+              "actual_eur_m2": {
+                "type": "number"
+              },
+              "predicted_eur_m2": {
+                "type": "number"
+              },
+              "low_eur_m2": {
+                "type": "number"
+              },
+              "high_eur_m2": {
+                "type": "number"
+              },
+              "abs_pct_error": {
+                "type": "number"
+              },
+              "signed_pct_error": {
+                "type": "number"
+              },
+              "within_range": {
+                "type": "boolean"
+              },
+              "comps_used": {
+                "type": "number"
+              },
+              "effective_sample_size": {
+                "type": "number"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "date",
+              "surface_m2",
+              "band",
+              "actual_eur_m2",
+              "predicted_eur_m2",
+              "low_eur_m2",
+              "high_eur_m2",
+              "abs_pct_error",
+              "signed_pct_error",
+              "within_range",
+              "comps_used",
+              "effective_sample_size",
+              "confidence"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "method",
+        "type",
+        "candidates",
+        "evaluated",
+        "skipped_not_estimable",
+        "year_range",
+        "overall",
+        "by_surface_band",
+        "by_year",
+        "worst_cases",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -435,6 +4048,160 @@
         }
       },
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "resolved_address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "point": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "additionalProperties": true
+        },
+        "parcels_found": {
+          "type": "number"
+        },
+        "parcels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "idu": {
+                "type": "string",
+                "description": "Unique cadastral id quoted on deeds, e.g. 69382000AB0062"
+              },
+              "section": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "numero": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "contenance_m2": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Cadastral taxed area of the whole parcel, land included — not habitable surface"
+              },
+              "code_insee": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "commune": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "com_abs": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "approx_center": {
+                "anyOf": [
+                  {
+                    "$ref": "#/properties/point"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "bbox": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "idu",
+              "section",
+              "numero",
+              "contenance_m2",
+              "code_insee",
+              "commune",
+              "com_abs",
+              "approx_center",
+              "bbox"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "source_url",
+        "resolved_address",
+        "point",
+        "parcels_found",
+        "parcels",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -462,6 +4229,200 @@
       "additionalProperties": false,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "resolved_address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "point": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "additionalProperties": true
+        },
+        "zoning_areas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "U urban, AU to be urbanised, A agricultural, N natural"
+              },
+              "partition": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "document_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "document_valid_from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "regulation_file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "document_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "description",
+              "type",
+              "partition",
+              "document_id",
+              "document_valid_from",
+              "regulation_file",
+              "document_url"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "prescriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subtype_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "geometry_kind": {
+                "type": "string",
+                "enum": [
+                  "surf",
+                  "lin",
+                  "pct"
+                ]
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "document_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "document_valid_from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "regulation_file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "type_code",
+              "subtype_code",
+              "geometry_kind",
+              "value",
+              "document_id",
+              "document_valid_from",
+              "regulation_file"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "coverage_note": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "source_url",
+        "resolved_address",
+        "point",
+        "zoning_areas",
+        "prescriptions",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "execution": {
       "taskSupport": "forbidden"
     }
@@ -482,6 +4443,101 @@
         "address"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "resolved_address": {
+          "type": "string"
+        },
+        "point": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "additionalProperties": true
+        },
+        "iris": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "code_iris": {
+                  "type": "string",
+                  "description": "9-character INSEE IRIS code, commune code plus 4 digits"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "code_insee": {
+                  "type": "string"
+                },
+                "commune": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "code_iris",
+                "name",
+                "type",
+                "code_insee",
+                "commune"
+              ],
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "source_url",
+        "resolved_address",
+        "point",
+        "iris",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
@@ -518,6 +4574,1197 @@
         "address"
       ],
       "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "properties": {
+            "resolved_address": {
+              "type": "string"
+            },
+            "insee_code": {
+              "type": "string"
+            },
+            "iris_code": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "rooms": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "furnished": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "period": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "resolved_address",
+            "insee_code",
+            "iris_code",
+            "rooms",
+            "furnished",
+            "period"
+          ],
+          "additionalProperties": true
+        },
+        "covered": {
+          "type": "boolean"
+        },
+        "city": {
+          "type": "string"
+        },
+        "area_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "year": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rooms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "period": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "furnished": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "values": {
+          "type": "object",
+          "properties": {
+            "reference_eur_m2_month": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ceiling_eur_m2_month": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Loyer de référence majoré: a legal ceiling"
+            },
+            "floor_eur_m2_month": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "reference_eur_m2_month",
+            "ceiling_eur_m2_month",
+            "floor_eur_m2_month"
+          ],
+          "additionalProperties": true
+        },
+        "matched": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "closest"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "covered_cities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "query",
+        "covered",
+        "source",
+        "note"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "compare_properties",
+    "title": "Compare 2–5 addresses side by side",
+    "description": "Side-by-side comparison of 2 to 5 French addresses in one call: current market level (€/m²), comparables valuation with confidence, asking rents, DPE with legal rental status (décret n° 2024-501) and estimated energy cost, plus row-index rankings (cheapest market, best yield). Each section degrades independently, like property_report. Source: DVF, Carte des loyers, ADEME — official open data.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "description": "Address in France"
+              },
+              "type_local": {
+                "type": "string",
+                "enum": [
+                  "Appartement",
+                  "Maison"
+                ],
+                "description": "Enables the valuation row; filter by dwelling type"
+              },
+              "surface_m2": {
+                "type": "number",
+                "minimum": 8,
+                "maximum": 1000,
+                "description": "Enables the valuation and gross-yield rows"
+              },
+              "rooms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20,
+                "description": "Main rooms (pièces)"
+              }
+            },
+            "required": [
+              "address"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 2,
+          "maxItems": 5,
+          "description": "2 to 5 addresses to compare, in your order"
+        },
+        "radius_m": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 5000,
+          "description": "Search radius in meters around the address (default 500; ignored for city-wide queries)"
+        }
+      },
+      "required": [
+        "targets"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "targets_count": {
+              "type": "number"
+            },
+            "radius_m": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "targets_count",
+            "radius_m"
+          ],
+          "additionalProperties": true
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  },
+                  "type_local": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "surface_m2": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "rooms": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "address",
+                  "type_local",
+                  "surface_m2",
+                  "rooms"
+                ],
+                "additionalProperties": true
+              },
+              "resolved_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "market": {
+                "type": "object",
+                "properties": {
+                  "median_eur_m2_last_12m": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "sales_last_12m": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "median_eur_m2_all_period": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "median_eur_m2_last_12m",
+                  "sales_last_12m",
+                  "median_eur_m2_all_period"
+                ],
+                "additionalProperties": true
+              },
+              "valuation": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "value_eur": {
+                        "type": "object",
+                        "properties": {
+                          "estimate": {
+                            "type": "number"
+                          },
+                          "low": {
+                            "type": "number"
+                          },
+                          "high": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "estimate",
+                          "low",
+                          "high"
+                        ],
+                        "additionalProperties": true
+                      },
+                      "confidence": {
+                        "type": "string",
+                        "enum": [
+                          "high",
+                          "medium",
+                          "low"
+                        ]
+                      },
+                      "comps_used": {
+                        "type": "number"
+                      },
+                      "effective_sample_size": {
+                        "type": "number"
+                      },
+                      "gross_yield_pct": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "net_yield_after_average_property_tax_pct": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "value_eur",
+                      "confidence",
+                      "comps_used",
+                      "effective_sample_size",
+                      "gross_yield_pct",
+                      "net_yield_after_average_property_tax_pct"
+                    ],
+                    "additionalProperties": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Null when type_local or surface_m2 was not provided for this row"
+              },
+              "rent": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "indicator_used": {
+                        "type": "string"
+                      },
+                      "rent_eur_m2_month": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "estimated_monthly_rent_eur": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "indicator_used",
+                      "rent_eur_m2_month",
+                      "estimated_monthly_rent_eur"
+                    ],
+                    "additionalProperties": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "energy": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "energy_label": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "rental_status": {
+                        "type": "string",
+                        "enum": [
+                          "louable",
+                          "bientot_interdit",
+                          "interdit",
+                          "inconnu"
+                        ]
+                      },
+                      "ban_date": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "is_passoire_thermique": {
+                        "type": "boolean"
+                      },
+                      "annual_energy_cost_eur": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "energy_label",
+                      "rental_status",
+                      "ban_date",
+                      "is_passoire_thermique",
+                      "annual_energy_cost_eur"
+                    ],
+                    "additionalProperties": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "errors": {
+                "type": "object",
+                "properties": {
+                  "market": {
+                    "type": "string"
+                  },
+                  "valuation": {
+                    "type": "string"
+                  },
+                  "rent": {
+                    "type": "string"
+                  },
+                  "energy": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "input",
+              "resolved_address",
+              "market",
+              "valuation",
+              "rent",
+              "energy",
+              "errors"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "rankings": {
+          "type": "object",
+          "properties": {
+            "cheapest_eur_m2": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Row indices, cheapest market median first"
+            },
+            "best_gross_yield_pct": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Row indices, best valuation yield first"
+            }
+          },
+          "required": [
+            "cheapest_eur_m2",
+            "best_gross_yield_pct"
+          ],
+          "additionalProperties": true
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "rows",
+        "rankings",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "acquisition_costs",
+    "title": "Acquisition costs and yield simulation",
+    "description": "Simulate the costs of buying a French dwelling and its rental yield: droits de mutation (official 2026 scale, about 6.42 % for communes over 5 000 inhabitants), notary fees and publication, commune-average taxe foncière (REI), modelled asking rent (Carte des loyers), and gross / net yields. The price defaults to a comparables-based estimate (estimate_property) but can be replaced by an agreed or asking price. All figures are indicative — the taxe foncière is a commune average, never an individual tax notice, and rents are modelled asking rents, not regulated reference rents. Source: DVF, Carte des loyers, REI.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France"
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ],
+          "description": "Dwelling type"
+        },
+        "surface_m2": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 1000,
+          "description": "Living surface in m²"
+        },
+        "rooms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Main rooms (pièces)"
+        },
+        "price_eur": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Known price in € (negotiated or asking). Absent: use the comparables-based estimate."
+        },
+        "price_from": {
+          "type": "string",
+          "enum": [
+            "estimate",
+            "agreed",
+            "asking"
+          ],
+          "description": "What price_eur means when provided; 'estimate' (default) lets the tool value the dwelling itself"
+        },
+        "notary_model": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "hands_off",
+            "aggressive"
+          ],
+          "description": "Notary fee assumption: standard (typical card), hands_off (about +250 €), aggressive (bare minimum, 750 €)"
+        }
+      },
+      "required": [
+        "address",
+        "type_local",
+        "surface_m2"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "price_eur": {
+          "type": "number"
+        },
+        "price_from": {
+          "type": "string",
+          "enum": [
+            "estimate",
+            "agreed",
+            "asking"
+          ]
+        },
+        "acquisition_costs": {
+          "type": "object",
+          "properties": {
+            "base_pct": {
+              "type": "number",
+              "description": "Statutory base rate, %"
+            },
+            "rights_de_mutation_pct": {
+              "type": "number",
+              "description": "Total droits de mutation, %"
+            },
+            "droits_de_mutation": {
+              "type": "number"
+            },
+            "emoluments_notaire": {
+              "type": "number"
+            },
+            "publication": {
+              "type": "number"
+            },
+            "total_fees": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "base_pct",
+            "rights_de_mutation_pct",
+            "droits_de_mutation",
+            "emoluments_notaire",
+            "publication",
+            "total_fees"
+          ],
+          "additionalProperties": true
+        },
+        "taxe_foncière_annuale": {
+          "type": "number",
+          "description": "Commune-average annual taxe foncière from the REI dataset — not an individual tax notice"
+        },
+        "loyer": {
+          "type": "object",
+          "properties": {
+            "eur_m2_month": {
+              "type": "number"
+            },
+            "eur_month": {
+              "type": "number"
+            },
+            "eur_year": {
+              "type": "number"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "estimate",
+                "agreed",
+                "asking"
+              ]
+            }
+          },
+          "required": [
+            "eur_m2_month",
+            "eur_month",
+            "eur_year",
+            "status"
+          ],
+          "additionalProperties": true
+        },
+        "returns": {
+          "type": "object",
+          "properties": {
+            "gross_yield_pct": {
+              "type": "number"
+            },
+            "net_yield_pct": {
+              "type": "number",
+              "description": "After the average property tax and the acquisition fees"
+            },
+            "net_after_fees_pct": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "gross_yield_pct",
+            "net_yield_pct",
+            "net_after_fees_pct"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "price_eur",
+        "price_from",
+        "acquisition_costs",
+        "taxe_foncière_annuale",
+        "loyer",
+        "returns"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "search_by_budget",
+    "title": "Find what a budget can buy in a zone",
+    "description": "The inverse of the estimator: 'with 300 k€, where can I buy?' For each commune of a département it computes the median €/m² from actual notarized sales (DVF, last 4 published years), divides the budget by it to get the surface the budget buys, and layers the modelled asking rent for the gross yield. Returns the qualifying communes ranked by surface, yield and price, plus the communes skipped for lack of data. The budget is the purchase price only — acquisition fees come on top (see acquisition_costs). Source: DVF, Carte des loyers, geo.api.gouv.fr.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "budget_eur": {
+          "type": "number",
+          "minimum": 1000,
+          "description": "Purchase budget in €, fees excluded"
+        },
+        "type_local": {
+          "type": "string",
+          "enum": [
+            "Appartement",
+            "Maison"
+          ],
+          "description": "Dwelling type; absent: all single-dwelling sales"
+        },
+        "zone": {
+          "type": "string",
+          "description": "Commune name, INSEE code, address, or département code (e.g. '69', '13')"
+        },
+        "min_surface_m2": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Minimum surface the budget must buy (default 30)"
+        },
+        "max_communes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40,
+          "description": "Communes to scan, most populous first (default 15, max 40)"
+        }
+      },
+      "required": [
+        "budget_eur",
+        "zone"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "budget_eur": {
+          "type": "number"
+        },
+        "type_local": {
+          "type": "string"
+        },
+        "zone": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string"
+            },
+            "resolved": {
+              "type": "string"
+            },
+            "departement": {
+              "type": "string"
+            },
+            "communes_scanned": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "input",
+            "resolved",
+            "departement",
+            "communes_scanned"
+          ],
+          "additionalProperties": true
+        },
+        "years_used": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "communes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "insee_code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "postcodes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "population": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "price": {
+                "type": "object",
+                "properties": {
+                  "median_eur_m2_last_12m": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "median_eur_m2_all_period": {
+                    "type": "number"
+                  },
+                  "sales_last_12m": {
+                    "type": "number"
+                  },
+                  "sales_all_period": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "median_eur_m2_last_12m",
+                  "median_eur_m2_all_period",
+                  "sales_last_12m",
+                  "sales_all_period"
+                ],
+                "additionalProperties": true
+              },
+              "surface": {
+                "type": "object",
+                "properties": {
+                  "max_surface_m2": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "max_surface_m2"
+                ],
+                "additionalProperties": true
+              },
+              "rent": {
+                "type": "object",
+                "properties": {
+                  "indicator_used": {
+                    "type": "string"
+                  },
+                  "rent_eur_m2_month": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "estimated_monthly_rent_eur": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "indicator_used",
+                  "rent_eur_m2_month",
+                  "estimated_monthly_rent_eur"
+                ],
+                "additionalProperties": true
+              },
+              "gross_yield_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "below_min_surface": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "insee_code",
+              "name",
+              "postcodes",
+              "population",
+              "price",
+              "surface",
+              "rent",
+              "gross_yield_pct",
+              "below_min_surface"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "rankings": {
+          "type": "object",
+          "properties": {
+            "most_surface": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Indices into communes, most surface per euro first"
+            },
+            "best_gross_yield_pct": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "cheapest_eur_m2": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "most_surface",
+            "best_gross_yield_pct",
+            "cheapest_eur_m2"
+          ],
+          "additionalProperties": true
+        },
+        "not_enough_data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "insee_code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sales": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "insee_code",
+              "name",
+              "sales"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "insee_code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "insee_code",
+              "name",
+              "reason"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "budget_eur",
+        "type_local",
+        "zone",
+        "years_used",
+        "communes",
+        "rankings",
+        "not_enough_data",
+        "errors",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "risk_summary",
+    "title": "Risk summary: one line per risk",
+    "description": "Consumer-grade risk digest for a French address or point: one plain-language sentence each for flood, clay shrink-swell, radon, industrial sites (ICPE) and the DPE rental-ban schedule, plus a one-line headline and any other present risk named. Reuses Géorisques and ADEME. When Géorisques is unreachable every risk line reads UNKNOWN — never a clean bill of health. Source: Géorisques, ADEME.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France (alternative to lat/lon)"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "resolved_address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "available": {
+          "type": "boolean",
+          "description": "false: Géorisques unreachable, so every risk status is UNKNOWN, not risk-free"
+        },
+        "point": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "additionalProperties": true
+        },
+        "headline": {
+          "type": "string",
+          "description": "One-sentence synthesis; states UNKNOWN explicitly when the source is down"
+        },
+        "signals_count": {
+          "type": "number",
+          "description": "Items reading `present`: a risk signalled, or a rental ban that applies"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "present",
+                  "absent",
+                  "unknown"
+                ],
+                "description": "unknown = source unreachable or DPE missing/unreadable, never \"safe\""
+              },
+              "at_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "in_commune": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sentence": {
+                "type": "string",
+                "description": "One plain-language line a client can render as-is"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "status",
+              "at_address",
+              "in_commune",
+              "sentence"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "other_present_risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Present risks outside the summarised categories, named so nothing is hidden"
+        },
+        "unavailable": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "portal_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "reason",
+            "portal_url"
+          ],
+          "additionalProperties": true
+        },
+        "dpe_error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "source_url",
+        "resolved_address",
+        "available",
+        "point",
+        "headline",
+        "signals_count",
+        "items",
+        "other_present_risks",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "execution": {
