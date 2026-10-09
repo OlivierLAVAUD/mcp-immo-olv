@@ -21,6 +21,7 @@
     "dist",
     "README.md",
     "EXAMPLES.md",
+    "Prompts.md",
     "LICENSE"
   ],
   "scripts": {

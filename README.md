@@ -237,6 +237,11 @@ Les sorties réelles des outils — digest de risques, proximité, comparaison,
 recherche par budget, fiche Markdown, lots d'adresses et messages d'erreur — sont
 dans **[EXAMPLES.md](EXAMPLES.md)**, rejouables avec `npm run examples`.
 
+Des **prompts d'exemple pour les 21 outils** (à copier dans votre client),
+classés par besoin et par parcours, sont dans **[Prompts.md](Prompts.md)**. Ils
+incluent des prompts qui vérifient les garde-fous : source injoignable →
+`inconnu`, estimation refusée sous trois comparables, adresse inexistante.
+
 ## Méthodologie d'estimation
 
 L'estimation est une médiane pondérée des ventes comparables : même type de

@@ -18,6 +18,10 @@
 - README documents the tool, its ODbL attribution and the honesty rule, and the
   skill tells a client never to read an empty category as a real absence;
   `npm run smoke` and `npm run examples` now cover it live.
+- **`Prompts.md`**: example usage prompts for all 21 tools, grouped by need and
+  by end-to-end scenario, with attachments for the plugin commands and a section
+  of prompts that test the guardrails (unreachable source reads unknown, fewer
+  than three comparables, unknown address).
 - The captured example outputs move out of the README into **EXAMPLES.md** — one
   numbered block per tool, each stating what its output proves, kept in step
   with `npm run examples` which replays and checks them. README keeps a pointer,
