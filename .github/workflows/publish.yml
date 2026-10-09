@@ -14,10 +14,22 @@ name: Publish
 # The MCP Registry side needs no configuration: `login github-oidc` verifies the
 # GitHub Actions OIDC token, which is why the server name lives in the
 # io.github.OlivierLAVAUD/ namespace.
+#
+# If the registry step fails while npm is still processing the release, re-run it
+# without republishing: Actions -> Publish -> Run workflow, with `registry_only`
+# checked. The registry validates the npm version against registry.npmjs.org, and
+# npm serves a fresh release asynchronously.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      registry_only:
+        description: >-
+          Skip npm publish (the version is already on npm) and only (re)publish
+          to the MCP Registry
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -79,6 +91,7 @@ jobs:
         run: npx --yes @anthropic-ai/claude-code@latest plugin validate . --strict
 
       - name: Publish to npm
+        if: ${{ inputs.registry_only != true }}
         run: npm publish
 
       - name: Install mcp-publisher
@@ -89,4 +102,17 @@ jobs:
         run: ./mcp-publisher login github-oidc
 
       - name: Publish to the MCP Registry
-        run: ./mcp-publisher publish
+        # The registry rejects a version npm has not started serving yet, and npm
+        # answers a fresh publish with "being processed and may take a few
+        # minutes". Retry with backoff rather than failing the release on that
+        # window; the last attempt is the one that reports the error.
+        run: |
+          for attempt in $(seq 1 8); do
+            if ./mcp-publisher publish; then
+              exit 0
+            fi
+            echo "::warning::MCP Registry publish attempt $attempt failed; retrying in 30s"
+            sleep 30
+          done
+          echo "::error::MCP Registry publish failed after 8 attempts"
+          exit 1
