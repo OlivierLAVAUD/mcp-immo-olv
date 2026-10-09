@@ -197,6 +197,10 @@ export function createServer(): McpServer {
         type_local: typeLocalSchema(),
         surface_m2: z.number().min(8).max(1000).optional(),
         rooms: z.number().int().min(1).max(20).optional(),
+        format: z
+          .enum(["json", "markdown"])
+          .optional()
+          .describe("Answer shape: 'json' (default, structured dossier) or 'markdown' (same dossier rendered as shareable Markdown)"),
       },
       outputSchema: OUTPUT_SCHEMAS.property_report,
     },

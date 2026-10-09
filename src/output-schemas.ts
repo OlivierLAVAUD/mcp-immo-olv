@@ -478,25 +478,33 @@ const backtestEstimatorOutput = obj({
 /**
  * `property_report` isolates its sections: any of them can come back as
  * `{ error }` without failing the call. The schema says exactly that.
+ *
+ * The dossier has two renderings, and the schema carries both: the structured
+ * form (default) with every section, or the Markdown form
+ * (`format: "markdown"`) as a single `content` string. Every section is
+ * `.optional()` because the two shapes are disjoint — a Markdown answer has
+ * no sections, a structured one has no `content`.
  */
 export const section = <T extends z.ZodTypeAny>(schema: T) =>
   z.union([schema, obj({ error: z.string() })]);
 
 const propertyReportOutput = obj({
-  resolved_address: z.string(),
-  market: section(pricePerM2Output),
-  recent_sales_nearby: section(propertySalesOutput),
-  valuation: section(estimatePropertyOutput).nullable(),
-  rent: section(rentEstimateOutput),
-  rent_control: section(rentControlOutput),
-  property_tax: section(propertyTaxEstimateOutput),
-  cadastre: section(cadastralParcelOutput),
-  urbanism: section(urbanismZoningOutput),
-  iris: section(irisLookupOutput),
-  energy_diagnostics: section(dpeLookupOutput),
-  risks: section(naturalRisksOutput),
-  commune: section(communeInfoOutput),
-  generated_from: z.string(),
+  format: z.enum(["json", "markdown"]).optional(),
+  content: z.string().optional().describe("Rendered Markdown dossier, present when format is 'markdown'"),
+  resolved_address: z.string().optional(),
+  market: section(pricePerM2Output).optional(),
+  recent_sales_nearby: section(propertySalesOutput).optional(),
+  valuation: section(estimatePropertyOutput).nullable().optional(),
+  rent: section(rentEstimateOutput).optional(),
+  rent_control: section(rentControlOutput).optional(),
+  property_tax: section(propertyTaxEstimateOutput).optional(),
+  cadastre: section(cadastralParcelOutput).optional(),
+  urbanism: section(urbanismZoningOutput).optional(),
+  iris: section(irisLookupOutput).optional(),
+  energy_diagnostics: section(dpeLookupOutput).optional(),
+  risks: section(naturalRisksOutput).optional(),
+  commune: section(communeInfoOutput).optional(),
+  generated_from: z.string().optional(),
 });
 
 /* --------------------------------------------------------------- compare */

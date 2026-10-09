@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.6.0 — 2026-10-09
+
+### Added
+
+- **Markdown export of the dossier.** `property_report` accepts
+  `format: "markdown"` and renders the same structured dossier as shareable
+  Markdown — a memo, an email, a note — through a pure function
+  (`src/markdown.ts`) that touches no network. Every figure keeps the meaning
+  it has in the JSON payload: a section that failed is reported as unavailable
+  with its reason, and an unreachable Géorisques stays an explicit **unknown**
+  rather than "no risk". The footer carries the sources and the standing
+  disclaimer (open-data analysis, not a professional appraisal).
+- The `property_report` output schema now declares both shapes: the structured
+  form with every section, and the Markdown form as a single `content` string.
+  Each section is `.optional()` because the two are disjoint. Tests cover the
+  recorded Lyon dossier and the degradation cases (`test/markdown.test.ts`).
+
+### Fixed
+
+- README: the structured-output section said "16 outils" while 19 are
+  registered.
+
 ## 1.5.0 — 2026-10-09
 
 ### Added

@@ -1,4 +1,5 @@
 import { locate, section } from "./shared.js";
+import { renderReportMarkdown } from "../markdown.js";
 import {
   pricePerM2,
   propertySales,
@@ -27,6 +28,8 @@ export async function propertyReport(args: {
   type_local?: "Appartement" | "Maison";
   surface_m2?: number;
   rooms?: number;
+  /** "json" (default) returns the structured dossier; "markdown" returns it rendered. */
+  format?: "json" | "markdown";
 }) {
   const { geo } = await locate(args.address);
 
@@ -70,7 +73,7 @@ export async function propertyReport(args: {
     section(() => rentControl({ address: args.address, rooms: args.rooms })),
   ]);
 
-  return {
+  const dossier = {
     resolved_address: geo.label,
     market,
     recent_sales_nearby: sales,
@@ -87,4 +90,13 @@ export async function propertyReport(args: {
     generated_from:
       "DVF (DGFiP/Etalab), Carte des loyers (Min. Logement/ANIL), ADEME, Géorisques, BAN, INSEE — all official French open data, queried live.",
   };
+
+  if ((args.format ?? "json") === "markdown") {
+    return {
+      format: "markdown" as const,
+      content: renderReportMarkdown(dossier),
+    };
+  }
+
+  return dossier;
 }

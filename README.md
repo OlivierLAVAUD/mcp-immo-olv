@@ -180,7 +180,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 
 | Outil | Résultat | Source |
 |---|---|---|
-| `property_report` | Dossier complet : marché, ventes, estimation, loyers, taxe, DPE, risques, commune, cadastre, PLU, IRIS, encadrement | Toutes les sources ci-dessous |
+| `property_report` | Dossier complet : marché, ventes, estimation, loyers, taxe, DPE, risques, commune, cadastre, PLU, IRIS, encadrement ; option `format: "markdown"` pour une fiche partageable | Toutes les sources ci-dessous |
 | `compare_properties` | Comparaison côte à côte de 2 à 5 adresses : marché, estimation, loyers, DPE, classements | DVF + Carte des loyers + ADEME |
 | `acquisition_costs` | Simulation des frais d'acquisition (droits de mutation, émoluments, taxe foncière moyenne) et rendements brut/net | Barème officiel + REI + Carte des loyers |
 | `search_by_budget` | Recherche inversée : quelles communes un budget donné peut atteindre, surfaces et rendements | DVF + Carte des loyers + geo.api.gouv.fr |
@@ -201,7 +201,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 
 ### Sortie structurée
 
-Les 16 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
+Les 19 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
 MCP 2025-06-18). Chaque appel renvoie donc la même charge utile deux fois :
 `structuredContent`, l'objet validé par le SDK avant envoi, et le bloc texte JSON
 historique, conservé pour les clients antérieurs à cette révision. Un client peut
