@@ -25,6 +25,7 @@ import {
   communeInfo,
   whatIsHere,
   compareProperties,
+  acquisitionCosts,
 } from "./handlers.js";
 import { OUTPUT_SCHEMAS } from "./output-schemas.js";
 import { VERSION } from "./version.js";
@@ -388,6 +389,36 @@ export function createServer(): McpServer {
       outputSchema: OUTPUT_SCHEMAS.compare_properties,
     },
     wrap(compareProperties),
+  );
+
+  server.registerTool(
+    "acquisition_costs",
+    {
+      title: "Acquisition costs and yield simulation",
+      description:
+        "Simulate the costs of buying a French dwelling and its rental yield: droits de mutation (official 2026 scale, about 6.42 % for communes over 5 000 inhabitants), notary fees and publication, commune-average taxe foncière (REI), modelled asking rent (Carte des loyers), and gross / net yields. The price defaults to a comparables-based estimate (estimate_property) but can be replaced by an agreed or asking price. All figures are indicative — the taxe foncière is a commune average, never an individual tax notice, and rents are modelled asking rents, not regulated reference rents. Source: DVF, Carte des loyers, REI.",
+      inputSchema: {
+        address: z.string().describe("Address in France"),
+        type_local: z.enum(["Appartement", "Maison"]).describe("Dwelling type"),
+        surface_m2: z.number().min(8).max(1000).describe("Living surface in m²"),
+        rooms: z.number().int().min(1).max(20).optional().describe("Main rooms (pièces)"),
+        price_eur: z
+          .number()
+          .min(1)
+          .optional()
+          .describe("Known price in € (negotiated or asking). Absent: use the comparables-based estimate."),
+        price_from: z
+          .enum(["estimate", "agreed", "asking"])
+          .optional()
+          .describe("What price_eur means when provided; 'estimate' (default) lets the tool value the dwelling itself"),
+        notary_model: z
+          .enum(["standard", "hands_off", "aggressive"])
+          .optional()
+          .describe("Notary fee assumption: standard (typical card), hands_off (about +250 €), aggressive (bare minimum, 750 €)"),
+      },
+      outputSchema: OUTPUT_SCHEMAS.acquisition_costs,
+    },
+    wrap(acquisitionCosts),
   );
 
   return server;

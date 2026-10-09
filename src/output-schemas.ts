@@ -556,6 +556,35 @@ const comparePropertiesOutput = obj({
   caveats: z.array(z.string()),
 });
 
+/* ----------------------------------------------------------- acquisition */
+
+const acquisitionCostsOutput = obj({
+  price_eur: z.number(),
+  price_from: z.enum(["estimate", "agreed", "asking"]),
+  acquisition_costs: obj({
+    base_pct: z.number().describe("Statutory base rate, %"),
+    rights_de_mutation_pct: z.number().describe("Total droits de mutation, %"),
+    droits_de_mutation: z.number(),
+    emoluments_notaire: z.number(),
+    publication: z.number(),
+    total_fees: z.number(),
+  }),
+  taxe_foncière_annuale: z
+    .number()
+    .describe("Commune-average annual taxe foncière from the REI dataset — not an individual tax notice"),
+  loyer: obj({
+    eur_m2_month: z.number(),
+    eur_month: z.number(),
+    eur_year: z.number(),
+    status: z.enum(["estimate", "agreed", "asking"]),
+  }),
+  returns: obj({
+    gross_yield_pct: z.number(),
+    net_yield_pct: z.number().describe("After the average property tax and the acquisition fees"),
+    net_after_fees_pct: z.number(),
+  }),
+});
+
 /* -------------------------------------------------------------- registry */
 
 /**
@@ -585,6 +614,7 @@ export const OUTPUT_SCHEMAS = {
   iris_lookup: irisLookupOutput,
   rent_control: rentControlOutput,
   compare_properties: comparePropertiesOutput,
+  acquisition_costs: acquisitionCostsOutput,
 } satisfies Record<string, z.AnyZodObject>;
 
 export type ToolName = keyof typeof OUTPUT_SCHEMAS;

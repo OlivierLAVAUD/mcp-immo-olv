@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.0 — 2026-10-09
+
+### Added
+
+- **Acquisition costs simulator** (`acquisition_costs`, the 18th tool). From an
+  address, a dwelling type and a surface (or a known price), it returns the
+  upfront costs — droits de mutation on the official 2026 scale (4.50 % base
+  + 0.7163 % department + 1.204 % commune, about 6.42 %), notary fees on the
+  standard "garantie civile" card (750 € per deed + 50 €/hour, with
+  `hands_off` and `aggressive` alternatives), publication — plus the
+  commune-average taxe foncière (REI), the modelled asking rent and the gross,
+  net and after-fees yields. `price_from` marks what the price is
+  (`estimate` by default, `agreed` or `asking` when supplied).
+- Every limit is stated in the payload: the taxe foncière is a commune
+  average, never an individual tax notice; rents are modelled asking rents,
+  not regulated reference rents; all figures are indicative. An OFGL outage
+  degrades the tax to 0 rather than killing the simulation.
+- `src/handlers/acquisition.ts` + 4 tests (`test/acquisition.test.ts`), fee
+  arithmetic validated against the statutory scale.
+
 ## 1.3.0 — 2026-10-09
 
 ### Added
