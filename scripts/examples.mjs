@@ -35,11 +35,17 @@ function expect(example, what, ok, detail = "") {
 }
 const call = (name, args) => client.callTool({ name, arguments: args });
 const first = (r) => (r.content?.[0]?.text ?? "").split("\n")[0];
+/** Nullable figure → printable string; a missing figure reads "—", never 0. */
+const nf = (v, digits = 0) => (v === null || v === undefined ? "—" : v.toLocaleString("fr-FR", { minimumFractionDigits: digits, maximumFractionDigits: digits }));
+const pad = (v, n) => String(v).padEnd(n);
+const padStart = (v, n) => String(v).padStart(n);
 
 const ADDRESS = process.argv[2] ?? "12 rue de la République Lyon";
 const OTHER = process.argv[3] ?? "10 place des Terreaux Lyon";
 const NOWHERE = "10 rue inexistante zzzzz 99999 Nulleville";
-console.log(`\nExemples live — serveur ${path.relative(ROOT, path.join(ROOT, "dist/index.js"))}, adresse ${ADDRESS}\n`);
+const BUDGET = 250_000;
+const ZONE = "69";
+console.log(`\nExemples live — serveur ${path.relative(ROOT, path.join(ROOT, "dist/index.js"))}, adresses « ${ADDRESS} » / « ${OTHER} »\n`);
 
 // 1 --------------------------------------------------------------------------
 // risk_summary: one sentence per risk, explicit about the unknown.
@@ -80,8 +86,108 @@ if (digest.isError) {
 }
 
 // 2 --------------------------------------------------------------------------
+// compare_properties: 2–5 addresses side by side, one row each, rankings as
+// row indices.
+console.log("\n2. compare_properties — deux adresses côte à côte");
+let t = Date.now();
+const cmp = await call("compare_properties", {
+  targets: [
+    { address: OTHER, type_local: "Appartement", surface_m2: 55, rooms: 3 },
+    { address: ADDRESS, type_local: "Appartement", surface_m2: 70, rooms: 4 },
+  ],
+});
+if (cmp.isError) {
+  failures++;
+  console.log(`  ✗ appel en erreur : ${first(cmp)}`);
+} else {
+  const s = cmp.structuredContent;
+  console.log(`   query : ${JSON.stringify(s.query)}   (${Date.now() - t} ms)`);
+  console.log(`   ${pad("#", 2)} ${pad("adresse résolue", 42)} ${padStart("€/m² 12 m", 9)} ${padStart("ventes", 7)} ${padStart("estimation €", 12)} ${pad("conf.", 6)} ${padStart("loyer €/m²", 9)} ${pad("DPE", 4)} ${padStart("rend. %", 7)}`);
+  for (const [i, r] of s.rows.entries()) {
+    console.log(
+      `   ${pad(i, 2)} ${pad(r.resolved_address ?? "(non résolue)", 42)} ` +
+        `${padStart(nf(r.market?.median_eur_m2_last_12m), 9)} ${padStart(nf(r.market?.sales_last_12m), 7)} ` +
+        `${padStart(nf(r.valuation?.value_eur.estimate), 12)} ${pad(r.valuation?.confidence ?? "—", 6)} ` +
+        `${padStart(nf(r.rent?.rent_eur_m2_month, 1), 9)} ${pad(r.energy?.energy_label ?? "—", 4)} ` +
+        `${padStart(nf(r.valuation?.gross_yield_pct, 1), 7)}`,
+    );
+  }
+  const named = (indices) => `${JSON.stringify(indices)} → ${indices.map((i) => s.rows[i]?.resolved_address ?? `#${i}`).join(", ") || "(aucun)"}`;
+  console.log(`   classements :`);
+  console.log(`     cheapest_eur_m2      ${named(s.rankings.cheapest_eur_m2)}`);
+  console.log(`     best_gross_yield_pct ${named(s.rankings.best_gross_yield_pct)}`);
+  const errored = s.rows.flatMap((r, i) => Object.entries(r.errors).map(([k, v]) => `#${i} ${k}: ${v}`));
+  console.log(`   sections en erreur : ${errored.length === 0 ? "aucune" : errored.join(" | ")}`);
+
+  expect("compare_properties", "une ligne par adresse, une adresse résolue chacune", s.rows.length === 2 && s.rows.every((r) => r.resolved_address));
+  expect("compare_properties", "chaque ligne porte marché, estimation, loyer et DPE", s.rows.every((r) => r.market && r.valuation && r.rent && r.energy));
+  // Rankings are row indices, and a row with no figure is absent from the
+  // ranking rather than ranked last.
+  const idxOk = (indices, has) =>
+    indices.every((i) => Number.isInteger(i) && i >= 0 && i < s.rows.length && has(s.rows[i]));
+  expect("compare_properties", "cheapest_eur_m2 = indices de lignes classées du moins cher au plus cher", idxOk(s.rankings.cheapest_eur_m2, (r) => r.market?.median_eur_m2_last_12m !== null && r.market !== null));
+  expect("compare_properties", "best_gross_yield_pct = indices de lignes ayant un rendement", idxOk(s.rankings.best_gross_yield_pct, (r) => r.valuation?.gross_yield_pct !== null && r.valuation !== null));
+  const prices = s.rankings.cheapest_eur_m2.map((i) => s.rows[i].market.median_eur_m2_last_12m);
+  expect("compare_properties", "le classement prix est croissant", prices.every((p, i) => i === 0 || prices[i - 1] <= p));
+}
+
+// 3 --------------------------------------------------------------------------
+// search_by_budget: the inverse search — what a budget reaches, commune by
+// commune, with thin-data communes excluded rather than ranked last.
+console.log(`\n3. search_by_budget — ce qu'un budget de ${nf(BUDGET)} € atteint dans le département ${ZONE}`);
+t = Date.now();
+const budget = await call("search_by_budget", {
+  budget_eur: BUDGET,
+  type_local: "Appartement",
+  zone: ZONE,
+  max_communes: 6,
+});
+if (budget.isError) {
+  failures++;
+  console.log(`  ✗ appel en erreur : ${first(budget)}`);
+} else {
+  const s = budget.structuredContent;
+  console.log(`   type=${s.type_local}  zone=${s.zone.input}  communes_scanned=${s.zone.communes_scanned}  années=${s.years_used.join(",")}   (${Date.now() - t} ms)`);
+  console.log(`   ${pad("commune", 26)} ${padStart("pop.", 8)} ${padStart("€/m² 12 m", 9)} ${padStart("surf. max", 9)} ${padStart("loyer €/m²", 9)} ${padStart("loyer €/mois", 12)} ${padStart("rend. %", 7)}`);
+  for (const c of s.communes) {
+    console.log(
+      `   ${pad(`${c.name} (${c.insee_code})`, 26)} ${padStart(nf(c.population), 8)} ` +
+        `${padStart(nf(c.price.median_eur_m2_last_12m ?? c.price.median_eur_m2_all_period), 9)} ${padStart(nf(c.surface.max_surface_m2), 9)} ` +
+        `${padStart(nf(c.rent.rent_eur_m2_month, 1), 9)} ${padStart(nf(c.rent.estimated_monthly_rent_eur), 12)} ${padStart(nf(c.gross_yield_pct, 1), 7)}`,
+    );
+  }
+  const named = (indices) => `${JSON.stringify(indices)} → ${indices.map((i) => s.communes[i]?.name ?? `#${i}`).join(", ") || "(aucun)"}`;
+  console.log(`   classements :`);
+  console.log(`     most_surface         ${named(s.rankings.most_surface)}`);
+  console.log(`     cheapest_eur_m2      ${named(s.rankings.cheapest_eur_m2)}`);
+  console.log(`     best_gross_yield_pct ${named(s.rankings.best_gross_yield_pct)}`);
+  console.log(`   données insuffisantes (${s.not_enough_data.length}) : ${s.not_enough_data.map((d) => `${d.name} (${d.sales} ventes)`).join(", ") || "aucune"}`);
+  console.log(`   erreurs (${s.errors.length}) : ${s.errors.map((e) => `${e.name}: ${e.reason}`).join(", ") || "aucune"}`);
+
+  expect("search_by_budget", "le budget est repris tel quel", s.budget_eur === BUDGET);
+  expect("search_by_budget", "des communes qualifient", s.communes.length > 0);
+  expect("search_by_budget", "le scan reste borné", s.zone.communes_scanned <= 6);
+  // The headline figure: surface = budget ÷ median €/m², computed from the
+  // median the same row reports.
+  const surfacesOk = s.communes.every((c) => {
+    const price = c.price.median_eur_m2_last_12m ?? c.price.median_eur_m2_all_period;
+    return c.surface.max_surface_m2 === Math.floor(s.budget_eur / price);
+  });
+  expect("search_by_budget", "surface max = budget ÷ médiane €/m² de la ligne", surfacesOk);
+  const idxOk = (indices, has) => indices.every((i) => Number.isInteger(i) && i >= 0 && i < s.communes.length && has(s.communes[i]));
+  expect("search_by_budget", "most_surface = indices des communes classées", idxOk(s.rankings.most_surface, (c) => c.surface.max_surface_m2 !== null));
+  expect("search_by_budget", "best_gross_yield_pct ne classe que des rendements connus", idxOk(s.rankings.best_gross_yield_pct, (c) => c.gross_yield_pct !== null));
+  const surfaces = s.rankings.most_surface.map((i) => s.communes[i].surface.max_surface_m2);
+  expect("search_by_budget", "le classement surface est décroissant", surfaces.every((v, i) => i === 0 || surfaces[i - 1] >= v));
+  // Thin data is set aside explicitly, never merged into the ranking.
+  const qualifying = new Set(s.communes.map((c) => c.insee_code));
+  expect("search_by_budget", "les communes sans données sont listées à part", s.not_enough_data.every((d) => !qualifying.has(d.insee_code) && typeof d.name === "string"));
+  expect("search_by_budget", "les limites méthodologiques sont annoncées", s.caveats.length >= 4 && s.note.includes("indices"));
+}
+
+// 4 --------------------------------------------------------------------------
 // property_report format=markdown: the dossier as a shareable fiche.
-console.log("\n2. property_report format=markdown — une fiche partageable");
+console.log("\n4. property_report format=markdown — une fiche partageable");
 const md = await call("property_report", {
   address: ADDRESS,
   type_local: "Appartement",
@@ -109,9 +215,9 @@ if (md.isError) {
   expect("markdown", "Géorisques injoignable = INCONNU explicite", risksLine !== undefined || risksAbsent);
 }
 
-// 3 --------------------------------------------------------------------------
+// 5 --------------------------------------------------------------------------
 // batch: one dossier per address, a bad address isolated.
-console.log("\n3. property_report batch — une adresse en échec n'entraîne pas le lot");
+console.log("\n5. property_report batch — une adresse en échec n'entraîne pas le lot");
 const batch = await call("property_report", {
   addresses: [OTHER, NOWHERE],
   type_local: "Appartement",
@@ -133,9 +239,9 @@ if (batch.isError) {
   expect("batch", "le lot annonce le profil partagé", s.query.surface_m2 === 55 && s.query.type_local === "Appartement");
 }
 
-// 4 --------------------------------------------------------------------------
+// 6 --------------------------------------------------------------------------
 // argument rules: the message a client reads when the batch is malformed.
-console.log("\n4. property_report — messages d'erreur des lots hors bornes");
+console.log("\n6. property_report — messages d'erreur des lots hors bornes");
 for (const [label, args, expected] of [
   ["1 seule adresse", { addresses: [ADDRESS] }, "at least 2 addresses"],
   ["6 adresses", { addresses: Array(6).fill(ADDRESS) }, "at most 5 addresses"],

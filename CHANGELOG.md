@@ -36,10 +36,11 @@
 ### Verification by example
 
 - `npm run examples` drives the built server over the real `stdio` transport and
-  both prints and checks the live output of the three new capabilities: the risk
-  digest (including the unreachable-source branch reading **unknown**), the batch
-  envelope with a failing address isolated, and the Markdown export. README
-  carries the captured outputs under *Exemples*.
+  both prints and checks the live output, example by example: the risk digest
+  (including the unreachable-source branch reading **unknown**), the side-by-side
+  comparison, the inverse budget search, the batch envelope with a failing
+  address isolated, the Markdown export, and the malformed-batch messages.
+  README carries the captured outputs under *Exemples*.
 
 ## 1.6.0 — 2026-10-09
 

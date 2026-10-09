@@ -256,6 +256,34 @@ Trois statuts seulement : `present` (signalé), `absent` (catégorie non signal�
 `unknown` (source injoignable ou DPE illisible). La sortie réelle contient les 5
 catégories, dont la liste complète des risques hors catégories.
 
+**Comparaison côte à côte** — `compare_properties` sur deux adresses lyonnaises :
+
+```text
+#  adresse résolue                         €/m² 12 m  ventes  estimation €  conf.  loyer €/m²  DPE  rend. %
+0  10 Place des Terreaux 69001 Lyon             4 852     283       263 000  high        17,1    E     3,9
+1  12 Rue de la République 69002 Lyon           4 848     189       369 000  high        17,6    D     3,8
+classements : cheapest_eur_m2 [1,0] · best_gross_yield_pct [0,1]
+```
+
+Les classements sont des **indices de lignes** (0 = votre première adresse) :
+une ligne sans chiffre en est absente — « unknown », jamais « dernier ». Une
+section en échec reste dans le `errors` de sa ligne.
+
+**Recherche inversée** — `search_by_budget` : 250 000 € d'appartements dans le
+Rhône, 6 communes les plus peuplées (extrait) :
+
+```text
+commune                     pop.  €/m² 12 m  surf. max  loyer €/m²  loyer €/mois  rend. %
+Vénissieux (69259)        65 502      2 517         99        14,7         1 456     7,0
+Vaulx-en-Velin (69256)    53 069      2 766         90        15,6         1 407     6,8
+Lyon (69123)             519 127      4 469         55        16,4           902     4,3
+classements : most_surface [5,1,3,…] · cheapest_eur_m2 [5,1,3,…] · best_gross_yield_pct [5,1,3,…]
+```
+
+`surf. max` = budget ÷ médiane €/m² de la ligne. Le budget est le prix d'achat
+seul — les frais (~6,4 %) s'ajoutent. Une commune aux ventes trop maigres est
+écartée du classement et listée nommément dans `not_enough_data`.
+
 **Lot d'adresses** — `property_report` avec `addresses` : une adresse introuvable
 ne fait pas tomber le lot :
 
