@@ -5,7 +5,7 @@ description: Répondre à une question immobilière française (prix, vente, est
 
 # Données immobilières françaises en open data
 
-Ce plugin branche le serveur MCP `mcp-immo-olv` : 16 outils, sources publiques
+Ce plugin branche le serveur MCP `mcp-immo-olv` : 20 outils, sources publiques
 françaises, **aucune clé API**. Ton rôle est de choisir le bon outil, de ne
 jamais inventer un chiffre, et de publier les limites que la réponse expose.
 
@@ -22,6 +22,7 @@ jamais inventer un chiffre, et de publier les limites que la réponse expose.
 | « Le montant de la taxe foncière » | `property_tax_estimate` |
 | « Quels travaux / quelle étiquette énergie ? » | `dpe_lookup` |
 | « Inondation, argiles, radon, séisme » | `natural_risks` |
+| « Les risques en un coup d'œil » | `risk_summary` (une phrase par risque, explicite sur les inconnus) |
 | « Est-ce que je peux construire / agrandir ? » | `urbanism_zoning` |
 | « Quelle est cette parcelle ? » | `cadastral_parcel` |
 | « Quel quartier INSEE ? » | `iris_lookup` |

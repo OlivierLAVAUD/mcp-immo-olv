@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.7.0 — 2026-10-09
+
+### Added
+
+- **Batch dossiers** (`property_report` with `addresses`). The tool now takes 2
+  to 5 addresses instead of one and returns a full dossier per address under
+  `reports`, each tagged with the `input_address` it answers. Every address is
+  isolated: one that cannot be resolved returns its own `error` and leaves the
+  others intact — the same rule that keeps a failed section from taking its
+  neighbours down inside one dossier. The shared profile (`type_local`,
+  `surface_m2`, `rooms`, `format`) applies to every address.
+- **Risk digest** (`risk_summary`, the 20th tool). One plain-language sentence
+  per risk — flood, clay shrink-swell, radon, industrial sites (ICPE) — plus
+  the DPE rental-ban status, a one-sentence headline, and any other present
+  risk named in `other_present_risks` so nothing is hidden. Reuses Géorisques
+  and ADEME. When Géorisques is unreachable every risk line reads **unknown**,
+  never a clean bill of health; a DPE left unchecked, missing or unreadable
+  says so too. Pure summariser in `src/risk-summary.ts`.
+- The `property_report` output schema now declares the batch envelope. Tests
+  cover the argument rules, per-address isolation and the SDK validation of the
+  envelope (`test/report.test.ts`), and the digest's present / absent / unknown
+  branches (`test/risk-summary.test.ts`).
+
 ## 1.6.0 — 2026-10-09
 
 ### Added

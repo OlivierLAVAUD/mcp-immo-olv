@@ -291,6 +291,39 @@ const naturalRisksOutput = obj({
   note: z.string(),
 });
 
+const riskSummaryItem = obj({
+  key: z.string(),
+  label: z.string(),
+  status: z
+    .enum(["present", "absent", "unknown"])
+    .describe('unknown = source unreachable or DPE missing/unreadable, never "safe"'),
+  at_address: z.string().nullable(),
+  in_commune: z.string().nullable(),
+  sentence: z.string().describe("One plain-language line a client can render as-is"),
+});
+
+const riskSummaryOutput = obj({
+  source: z.string(),
+  source_url: z.string(),
+  resolved_address: z.string().nullable(),
+  available: z
+    .boolean()
+    .describe("false: Géorisques unreachable, so every risk status is UNKNOWN, not risk-free"),
+  point,
+  headline: z
+    .string()
+    .describe("One-sentence synthesis; states UNKNOWN explicitly when the source is down"),
+  signals_count: z.number().describe("Items reading `present`: a risk signalled, or a rental ban that applies"),
+  items: z.array(riskSummaryItem),
+  other_present_risks: z
+    .array(z.string())
+    .describe("Present risks outside the summarised categories, named so nothing is hidden"),
+  unavailable: obj({ reason: z.string(), portal_url: z.string() }).optional(),
+  dpe_error: z.string().nullable().optional(),
+  note: z.string(),
+  caveats: z.array(z.string()),
+});
+
 const communeView = obj({
   nom: z.string(),
   insee_code: z.string(),
@@ -479,16 +512,19 @@ const backtestEstimatorOutput = obj({
  * `property_report` isolates its sections: any of them can come back as
  * `{ error }` without failing the call. The schema says exactly that.
  *
- * The dossier has two renderings, and the schema carries both: the structured
- * form (default) with every section, or the Markdown form
- * (`format: "markdown"`) as a single `content` string. Every section is
- * `.optional()` because the two shapes are disjoint — a Markdown answer has
- * no sections, a structured one has no `content`.
+ * The dossier has three renderings, and the schema carries all of them: the
+ * structured form (default) with every section, the Markdown form
+ * (`format: "markdown"`) as a single `content` string, and the batch form
+ * (2–5 addresses) as an envelope of one dossier per address. Section and
+ * envelope fields are `.optional()` because the shapes are disjoint — a
+ * Markdown answer has no sections, a structured one has no `content`, a batch
+ * carries its dossiers under `reports`.
  */
 export const section = <T extends z.ZodTypeAny>(schema: T) =>
   z.union([schema, obj({ error: z.string() })]);
 
-const propertyReportOutput = obj({
+/** Everything one dossier carries, whatever its rendering. */
+const dossierShape = {
   format: z.enum(["json", "markdown"]).optional(),
   content: z.string().optional().describe("Rendered Markdown dossier, present when format is 'markdown'"),
   resolved_address: z.string().optional(),
@@ -505,6 +541,37 @@ const propertyReportOutput = obj({
   risks: section(naturalRisksOutput).optional(),
   commune: section(communeInfoOutput).optional(),
   generated_from: z.string().optional(),
+};
+
+const propertyReportOutput = obj({
+  ...dossierShape,
+
+  // Batch form (2–5 addresses): an envelope around one dossier per address.
+  query: obj({
+    addresses_count: z.number(),
+    type_local: z.string().nullable(),
+    surface_m2: z.number().nullable(),
+    rooms: z.number().nullable(),
+  })
+    .optional()
+    .describe("Present in the batch form: the shared profile applied to every address"),
+  reports: z
+    .array(
+      obj({
+        ...dossierShape,
+        input_address: z
+          .string()
+          .describe("The address as requested, so a client can map each report to its input"),
+        error: z
+          .string()
+          .optional()
+          .describe("Why this address could not be dossied; the other reports are unaffected"),
+      }),
+    )
+    .optional()
+    .describe("One entry per requested address, in order"),
+  note: z.string().optional(),
+  caveats: z.array(z.string()).optional(),
 });
 
 /* --------------------------------------------------------------- compare */
@@ -669,6 +736,7 @@ export const OUTPUT_SCHEMAS = {
   compare_properties: comparePropertiesOutput,
   acquisition_costs: acquisitionCostsOutput,
   search_by_budget: searchByBudgetOutput,
+  risk_summary: riskSummaryOutput,
 } satisfies Record<string, z.AnyZodObject>;
 
 export type ToolName = keyof typeof OUTPUT_SCHEMAS;

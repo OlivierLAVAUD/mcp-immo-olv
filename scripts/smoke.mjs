@@ -15,6 +15,7 @@ import {
   rentControl,
   dpeLookup,
   naturalRisks,
+  riskSummary,
   communeInfo,
 } from "../dist/handlers.js";
 import { OUTPUT_SCHEMAS } from "../dist/output-schemas.js";
@@ -155,6 +156,22 @@ if (risks) {
       ? `  → unavailable (${risks.unavailable?.reason})`
       : `  → ${risks.naturalRisks.length} natural risks present`,
   );
+}
+
+// The digest answers even when Géorisques is down, but then every line must
+// read UNKNOWN — an outage must never pass as a clean bill of health.
+const riskDigest = await check(
+  "risk_summary",
+  () => riskSummary({ address: ADDRESS }),
+  (o) =>
+    o.available === false
+      ? `SOURCE UNAVAILABLE — risks are unknown: ${o.unavailable?.reason ?? "no reason given"}`
+      : o.items.length >= 5 && typeof o.headline === "string"
+        ? null
+        : `implausible digest: ${JSON.stringify(o).slice(0, 140)}`,
+);
+if (riskDigest) {
+  console.log(`  → ${riskDigest.headline}`);
 }
 
 const commune = await check("commune_info", () => communeInfo({ query: "Lyon" }), (o) =>

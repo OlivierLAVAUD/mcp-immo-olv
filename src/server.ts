@@ -27,6 +27,7 @@ import {
   compareProperties,
   acquisitionCosts,
   searchByBudget,
+  riskSummary,
 } from "./handlers.js";
 import { OUTPUT_SCHEMAS } from "./output-schemas.js";
 import { VERSION } from "./version.js";
@@ -191,9 +192,15 @@ export function createServer(): McpServer {
     {
       title: "Full property due-diligence report",
       description:
-        "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators and an aggregate taxe foncière proxy — plus a comparables-based valuation, gross yield and yield after average property tax when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property.",
+        "One call, full dossier for a French address: price-per-m² market stats, recent notarized sales, energy diagnostics (DPE), natural & technological risks, commune profile, official rent indicators and an aggregate taxe foncière proxy — plus a comparables-based valuation, gross yield and yield after average property tax when type_local and surface_m2 are provided. Ideal first call when a user asks about a specific property. Pass `addresses` (2 to 5) instead of `address` to dossier several neighbourhoods in one call; each report is isolated, so one bad address returns its own error without sinking the batch.",
       inputSchema: {
-        address: z.string().describe("Address in France"),
+        address: z.string().optional().describe("Address in France (mutually exclusive with `addresses`)"),
+        addresses: z
+          .array(z.string())
+          .min(2)
+          .max(5)
+          .optional()
+          .describe("2 to 5 addresses to dossier in one call, for comparing neighbourhoods (mutually exclusive with `address`)"),
         type_local: typeLocalSchema(),
         surface_m2: z.number().min(8).max(1000).optional(),
         rooms: z.number().int().min(1).max(20).optional(),
@@ -444,6 +451,20 @@ export function createServer(): McpServer {
       outputSchema: OUTPUT_SCHEMAS.search_by_budget,
     },
     wrap(searchByBudget),
+  );
+
+  server.registerTool(
+    "risk_summary",
+    {
+      title: "Risk summary: one line per risk",
+      description:
+        "Consumer-grade risk digest for a French address or point: one plain-language sentence each for flood, clay shrink-swell, radon, industrial sites (ICPE) and the DPE rental-ban schedule, plus a one-line headline and any other present risk named. Reuses Géorisques and ADEME. When Géorisques is unreachable every risk line reads UNKNOWN — never a clean bill of health. Source: Géorisques, ADEME.",
+      inputSchema: {
+        ...pointInputSchema(),
+      },
+      outputSchema: OUTPUT_SCHEMAS.risk_summary,
+    },
+    wrap(riskSummary),
   );
 
   return server;

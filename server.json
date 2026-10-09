@@ -6,12 +6,12 @@
     "url": "https://github.com/OlivierLAVAUD/mcp-immo-olv",
     "source": "github"
   },
-  "version": "1.6.0",
+  "version": "1.7.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "mcp-immo-olv",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "transport": {
         "type": "stdio"
       }

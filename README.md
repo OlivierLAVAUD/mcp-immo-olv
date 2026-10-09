@@ -66,7 +66,7 @@ onglet *Configure* → bouton *Configure MCP Servers*, puis ajouter dans `mcpSer
 
 L'extension ouvre son propre fichier de réglages MCP ; la CLI, elle, lit
 `~/.cline/data/settings/cline_mcp_settings.json` (surcharge possible avec la
-variable `CLINE_MCP_SETTINGS_PATH`). Ensuite, redémarrer Cline : les 16 outils
+variable `CLINE_MCP_SETTINGS_PATH`). Ensuite, redémarrer Cline : les 20 outils
 apparaissent dans la liste MCP.
 
 ### 3. Tout autre client MCP
@@ -84,7 +84,7 @@ Copier ce bloc dans la configuration du client (`mcpServers`) :
 }
 ```
 
-Redémarrer le client : les 16 outils apparaissent dans sa liste d'outils MCP.
+Redémarrer le client : les 20 outils apparaissent dans sa liste d'outils MCP.
 
 ### 4. Depuis ce dépôt (développement)
 
@@ -180,7 +180,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 
 | Outil | Résultat | Source |
 |---|---|---|
-| `property_report` | Dossier complet : marché, ventes, estimation, loyers, taxe, DPE, risques, commune, cadastre, PLU, IRIS, encadrement ; option `format: "markdown"` pour une fiche partageable | Toutes les sources ci-dessous |
+| `property_report` | Dossier complet : marché, ventes, estimation, loyers, taxe, DPE, risques, commune, cadastre, PLU, IRIS, encadrement ; option `format: "markdown"` pour une fiche partageable, ou `addresses` (2–5) pour un dossier par adresse | Toutes les sources ci-dessous |
 | `compare_properties` | Comparaison côte à côte de 2 à 5 adresses : marché, estimation, loyers, DPE, classements | DVF + Carte des loyers + ADEME |
 | `acquisition_costs` | Simulation des frais d'acquisition (droits de mutation, émoluments, taxe foncière moyenne) et rendements brut/net | Barème officiel + REI + Carte des loyers |
 | `search_by_budget` | Recherche inversée : quelles communes un budget donné peut atteindre, surfaces et rendements | DVF + Carte des loyers + geo.api.gouv.fr |
@@ -196,12 +196,13 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `urbanism_zoning` | Zone PLU (U / AU / A / N), règlement et prescriptions d'urbanisme | Géoportail de l'urbanisme (DGALN / IGN) |
 | `iris_lookup` | IRIS INSEE d'une adresse : code, nom, type, commune | CONTOURS-IRIS / ADMINEXPRESS, IGN |
 | `natural_risks` | Risques naturels et technologiques officiels | Géorisques |
+| `risk_summary` | Digest des risques : une phrase par risque (inondation, argile, radon, ICPE, DPE), explicite sur les inconnus | Géorisques + ADEME |
 | `commune_info` | Population, code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |
 | `geocode_address` / `reverse_geocode` | Adresse ↔ coordonnées, code INSEE et identifiant BAN | Base Adresse Nationale |
 
 ### Sortie structurée
 
-Les 19 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
+Les 20 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
 MCP 2025-06-18). Chaque appel renvoie donc la même charge utile deux fois :
 `structuredContent`, l'objet validé par le SDK avant envoi, et le bloc texte JSON
 historique, conservé pour les clients antérieurs à cette révision. Un client peut

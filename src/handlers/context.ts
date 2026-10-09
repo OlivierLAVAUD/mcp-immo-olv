@@ -1,6 +1,8 @@
 import { dpeByAddress, dpeByBanId, DPE_DATASET_LABELS, DPE_DATASET_ORDER } from "../apis/dpe.js";
 import { annualEnergyCost, rentalCompliance } from "../dpe-compliance.js";
-import { riskReport } from "../apis/georisques.js";
+import { riskReport, GEORISQUES_PORTAL } from "../apis/georisques.js";
+import { summarizeRisks } from "../risk-summary.js";
+import type { RentalCompliance } from "../dpe-compliance.js";
 import { communeByCode, communesByName } from "../apis/communes.js";
 import { parcelsAtPoint, CADASTRE_SOURCE, CADASTRE_SOURCE_URL } from "../apis/cadastre.js";
 import { zonesAtPoint, prescriptionsAtPoint, GPU_SOURCE, GPU_SOURCE_URL } from "../apis/gpu.js";
@@ -80,6 +82,58 @@ export async function naturalRisks(args: { address?: string; lat?: number; lon?:
     note: report.available
       ? "Only the risks Géorisques reports as present are listed: statusAtAddress is the situation at this exact address, statusInCommune the one elsewhere in the commune."
       : "Géorisques could not be reached, so the risk status at this address is UNKNOWN. This is not a statement that the address is risk-free — retry later, or check the official portal.",
+  };
+}
+
+/**
+ * Consumer-grade risk digest: one plain sentence per risk (flood, clay, radon,
+ * industrial sites, DPE rental ban), plus a one-line headline. Géorisques and
+ * the DPE are the same sources the detailed tools use, so the two can never
+ * disagree. An unreachable source reads as UNKNOWN on every line it covers.
+ */
+export async function riskSummary(args: { address?: string; lat?: number; lon?: number }) {
+  const { lat, lon, resolved } = await resolvePoint(args);
+  const risks = await riskReport(lat, lon);
+
+  // The DPE needs an address (it is keyed to one in ADEME); without it the
+  // digest still answers, and marks the DPE explicitly as not checked.
+  let dpeState: "checked" | "not_checked" | "error" = "not_checked";
+  let compliance: RentalCompliance | null = null;
+  let dpeError: string | null = null;
+  if (args.address !== undefined) {
+    try {
+      const dpe = await dpeLookup({ address: args.address, limit: 1 });
+      const first = dpe.diagnostics[0] as { rental_compliance?: RentalCompliance } | undefined;
+      compliance = first?.rental_compliance ?? null;
+      dpeState = "checked";
+    } catch (e) {
+      dpeState = "error";
+      dpeError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  const summary = summarizeRisks({ risks, dpe: { state: dpeState, compliance } });
+
+  return {
+    source: "Géorisques, Ministère de la Transition écologique + ADEME (DPE)",
+    source_url: risks.officialReportUrl ?? GEORISQUES_PORTAL,
+    resolved_address: resolved ?? risks.address,
+    available: risks.available,
+    point: { lat, lon },
+    headline: summary.headline,
+    signals_count: summary.signals_count,
+    items: summary.items,
+    other_present_risks: summary.other_present_risks,
+    unavailable: risks.unavailable,
+    dpe_error: dpeError,
+    note: risks.available
+      ? "One line per risk. `absent` means Géorisques did not report it present at this point; `unknown` means the answer is missing, never that the address is safe. other_present_risks lists anything present outside the summarised categories."
+      : "Géorisques could not be reached, so every risk status here is UNKNOWN — this is not a risk-free address. The DPE line is reported independently.",
+    caveats: [
+      "A digest, not a substitute for the full reports: see natural_risks and dpe_lookup for the underlying detail.",
+      "Géorisques lists declared risks at a point; it does not quantify your exposure or the cost of insuring against it.",
+      "This is public-data analysis, not a professional appraisal or a technical diagnosis.",
+    ],
   };
 }
 
