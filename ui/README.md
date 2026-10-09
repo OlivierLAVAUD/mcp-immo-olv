@@ -12,7 +12,7 @@ Deux vues :
 | Vue | Ce qu'elle fait |
 |---|---|
 | **Dossier** | Une adresse → un appel à `property_report` → dossier complet : estimation par comparables (avec la table des comparables auditable), marché €/m², ventes notariées, loyers officiels et rendement brut, DPE, risques Géorisques, profil de commune. Le serveur renvoie en plus le cadastre, le zonage PLU, l'IRIS et l'encadrement des loyers dans le même JSON. |
-| **Outils MCP** | Explorateur brut : les 20 outils exposés par le serveur, un formulaire généré depuis leur JSON Schema, et la réponse JSON telle quelle. Utile pour vérifier un contrat d'outil ou tester un cas limite. |
+| **Outils MCP** | Explorateur brut : les 21 outils exposés par le serveur, un formulaire généré depuis leur JSON Schema, et la réponse JSON telle quelle. Utile pour vérifier un contrat d'outil ou tester un cas limite. |
 
 ## Prérequis
 
@@ -57,7 +57,7 @@ le serveur :
    (un `property_report` complet sur le 12 rue de la République à Lyon), puis
    vérification que le markup contient les libellés attendus et aucun
    `[object Object]` / `NaN` / `undefined`.
-2. **Coercition de schémas** — sur les 20 outils réels (`fixtures/tools.json`) :
+2. **Coercition de schémas** — sur les 21 outils réels (`fixtures/tools.json`) :
    un formulaire vide coerce en charge vide, un formulaire rempli porte tous les
    arguments requis avec le bon type, les tableaux de nombres se parsent.
 3. **Console d'outils** — rendu avec la liste réelle, y compris l'indicateur

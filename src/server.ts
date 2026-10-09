@@ -19,6 +19,7 @@ import {
   cadastralParcel,
   urbanismZoning,
   irisLookup,
+  nearbyAmenities,
   rentControl,
   dpeLookup,
   naturalRisks,
@@ -350,6 +351,33 @@ export function createServer(): McpServer {
       outputSchema: OUTPUT_SCHEMAS.iris_lookup,
     },
     wrap(irisLookup),
+  );
+
+  server.registerTool(
+    "nearby_amenities",
+    {
+      title: "What is around an address (POIs)",
+      description:
+        "Nearby points of interest around a French address or point, from OpenStreetMap: public transport (train, metro, tram, bus stop), schools and higher education, everyday shops, health (pharmacy, doctor, hospital) and green/sport space — each with how many are within the radius and the closest ones, in metres as the crow flies. Answers the neighbourhood question no official French dataset covers directly. When Overpass is unreachable, every count is UNKNOWN (null) rather than zero. Source: OpenStreetMap contributors (ODbL), via the Overpass API.",
+      inputSchema: {
+        ...pointInputSchema(),
+        radius_m: z
+          .number()
+          .min(100)
+          .max(5000)
+          .optional()
+          .describe("Search radius in meters around the point (default 1000)"),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(5)
+          .optional()
+          .describe("How many closest POIs to list per category (default 3)"),
+      },
+      outputSchema: OUTPUT_SCHEMAS.nearby_amenities,
+    },
+    wrap(nearbyAmenities),
   );
 
   server.registerTool(

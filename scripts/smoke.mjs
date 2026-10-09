@@ -12,6 +12,7 @@ import {
   cadastralParcel,
   urbanismZoning,
   irisLookup,
+  nearbyAmenities,
   rentControl,
   dpeLookup,
   naturalRisks,
@@ -221,6 +222,27 @@ const neighbourhood = await check(
 );
 if (neighbourhood) {
   console.log(`  → IRIS ${neighbourhood.iris.code_iris} ${neighbourhood.iris.name}`);
+}
+
+// Overpass degrades to `available: false` when no mirror answers, so an outage
+// is reported as a failure here rather than passing as a quiet neighbourhood.
+const amenities = await check(
+  "nearby_amenities",
+  () => nearbyAmenities({ address: ADDRESS, radius_m: 800 }),
+  (o) =>
+    o.available === false
+      ? `SOURCE UNAVAILABLE — surroundings unknown: ${o.unavailable?.reason ?? "no reason given"}`
+      : o.categories.length === 5 && o.categories.some((c) => c.count > 0)
+        ? null
+        : "no amenities found around the address",
+);
+if (amenities) {
+  const transports = amenities.categories.find((c) => c.key === "transports");
+  console.log(
+    transports.count > 0
+      ? `  → ${transports.count} transports within ${amenities.radius_m} m, nearest at ${transports.nearest_distance_m} m`
+      : "  → no transport found within the radius",
+  );
 }
 
 const rentControlled = await check(

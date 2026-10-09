@@ -418,6 +418,41 @@ const irisLookupOutput = obj({
   caveats: z.array(z.string()),
 });
 
+const nearbyPoi = obj({
+  name: z.string().nullable(),
+  type: z.string().describe("OSM tag value that matched: tram_stop, pharmacy, university…"),
+  distance_m: z.number().describe("Straight-line distance in meters"),
+  lat: z.number(),
+  lon: z.number(),
+  osm: z.string().describe('OSM object id such as "node/123456", to check the claim at the source'),
+});
+
+const amenityCategory = obj({
+  key: z.string(),
+  label: z.string(),
+  count: z
+    .number()
+    .nullable()
+    .describe("Matching objects found within the radius; null = source unreachable, which is NOT zero"),
+  nearest_distance_m: z.number().nullable(),
+  nearest: z.array(nearbyPoi),
+});
+
+const nearbyAmenitiesOutput = obj({
+  source: z.string(),
+  source_url: z.string(),
+  resolved_address: z.string().nullable(),
+  point,
+  radius_m: z.number(),
+  available: z
+    .boolean()
+    .describe("false: Overpass unreachable, so every count is UNKNOWN — not zero"),
+  categories: z.array(amenityCategory),
+  unavailable: obj({ reason: z.string(), portal_url: z.string() }).optional(),
+  note: z.string(),
+  caveats: z.array(z.string()),
+});
+
 /**
  * Rent control answers two genuinely different things, so the schema is one
  * object with a discriminator rather than a union: a union would produce an
@@ -732,6 +767,7 @@ export const OUTPUT_SCHEMAS = {
   cadastral_parcel: cadastralParcelOutput,
   urbanism_zoning: urbanismZoningOutput,
   iris_lookup: irisLookupOutput,
+  nearby_amenities: nearbyAmenitiesOutput,
   rent_control: rentControlOutput,
   compare_properties: comparePropertiesOutput,
   acquisition_costs: acquisitionCostsOutput,

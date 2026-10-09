@@ -66,7 +66,7 @@ onglet *Configure* → bouton *Configure MCP Servers*, puis ajouter dans `mcpSer
 
 L'extension ouvre son propre fichier de réglages MCP ; la CLI, elle, lit
 `~/.cline/data/settings/cline_mcp_settings.json` (surcharge possible avec la
-variable `CLINE_MCP_SETTINGS_PATH`). Ensuite, redémarrer Cline : les 20 outils
+variable `CLINE_MCP_SETTINGS_PATH`). Ensuite, redémarrer Cline : les 21 outils
 apparaissent dans la liste MCP.
 
 ### 3. Tout autre client MCP
@@ -84,7 +84,7 @@ Copier ce bloc dans la configuration du client (`mcpServers`) :
 }
 ```
 
-Redémarrer le client : les 20 outils apparaissent dans sa liste d'outils MCP.
+Redémarrer le client : les 21 outils apparaissent dans sa liste d'outils MCP.
 
 ### 4. Depuis ce dépôt (développement)
 
@@ -195,6 +195,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `cadastral_parcel` | Parcelle cadastrale : identifiant `idu`, section, numéro, contenance officielle | PCI, IGN / DGFiP (API Carto) |
 | `urbanism_zoning` | Zone PLU (U / AU / A / N), règlement et prescriptions d'urbanisme | Géoportail de l'urbanisme (DGALN / IGN) |
 | `iris_lookup` | IRIS INSEE d'une adresse : code, nom, type, commune | CONTOURS-IRIS / ADMINEXPRESS, IGN |
+| `nearby_amenities` | Ce qu'il y a autour d'une adresse : transports, écoles, commerces, santé, espaces verts — nombre dans le rayon et distance à vol d'oiseau des plus proches | OpenStreetMap (ODbL), API Overpass |
 | `natural_risks` | Risques naturels et technologiques officiels | Géorisques |
 | `risk_summary` | Digest des risques : une phrase par risque (inondation, argile, radon, ICPE, DPE), explicite sur les inconnus | Géorisques + ADEME |
 | `commune_info` | Population, code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |
@@ -202,7 +203,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 
 ### Sortie structurée
 
-Les 20 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
+Les 21 outils déclarent le schéma de leur résultat (`outputSchema`, spécification
 MCP 2025-06-18). Chaque appel renvoie donc la même charge utile deux fois :
 `structuredContent`, l'objet validé par le SDK avant envoi, et le bloc texte JSON
 historique, conservé pour les clients antérieurs à cette révision. Un client peut
@@ -255,6 +256,20 @@ et vérifie les contrats associés (nécessite le réseau).
 Trois statuts seulement : `present` (signalé), `absent` (catégorie non signalée),
 `unknown` (source injoignable ou DPE illisible). La sortie réelle contient les 5
 catégories, dont la liste complète des risques hors catégories.
+
+**Qu'est-ce qu'il y a autour** — `nearby_amenities` à Lyon, rayon 800 m (extrait) :
+
+```text
+transports count=  67  plus proche= 116 m  → Saint-Nizier [bus_stop] 116 m | Cordeliers [bus_stop] 179 m | Cordeliers [station] 191 m
+education  count=  42  plus proche= 116 m  → Babilou L'Envol [kindergarten] 116 m | Collège Ampère [school] 135 m | Lycée Ampère [school] 150 m
+commerces  count= 109  plus proche=  25 m  → Carrefour City [convenience] 25 m | Auchan [supermarket] 59 m | La Vie Claire [convenience] 61 m
+sante      count=  38  plus proche= 173 m  → Grande Pharmacie Lyonnaise [pharmacy] 173 m | Pharmacie de l'Opéra [pharmacy] 207 m | Lafayette Florit [pharmacy] 239 m
+loisirs    count=  69  plus proche= 228 m  → (sans nom) [garden] 228 m | (sans nom) [garden] 232 m | (sans nom) [garden] 235 m
+```
+
+Les distances sont **à vol d'oiseau**, mesurées au centre de chaque objet OSM, et
+chaque POI porte son identifiant OSM (`node/…`) pour vérification. Si aucun miroir
+Overpass ne répond, tous les `count` sont `null` : **inconnu, jamais 0**.
 
 **Comparaison côte à côte** — `compare_properties` sur deux adresses lyonnaises :
 
@@ -372,6 +387,7 @@ donne une MAPE d'environ 21 %, un biais de +8 % et une couverture de 52,5 %.
 | Géoportail de l'urbanisme | DGALN / IGN | Zonage et prescriptions opposables ; les communes sans PLU en sont absentes |
 | CONTOURS-IRIS / ADMINEXPRESS | IGN (source INSEE) | Identité de l'IRIS ; aucune donnée socio-démographique dans cette couche |
 | Géorisques | Ministère de la Transition écologique | Rapport de risques officiel ; si leur API ne répond pas, la réponse porte `available: false` et le dit explicitement au lieu de renvoyer une liste vide |
+| OpenStreetMap (via Overpass) | Contributeurs OSM, ODbL | Points d'intérêt autour d'une adresse ; couverture communautaire, donc inégale, et un `count` nul quand Overpass ne répond pas signifie **inconnu**, jamais « rien autour » |
 | BAN / geo.api.gouv.fr | IGN / DINUM / INSEE | Adresses et unités administratives |
 
 Les jeux publics sont interrogés en direct, sans clé API. Le cache mémoire DVF

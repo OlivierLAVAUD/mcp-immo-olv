@@ -86,9 +86,50 @@ if (digest.isError) {
 }
 
 // 2 --------------------------------------------------------------------------
+// nearby_amenities: what is around the address, from OpenStreetMap. Distances
+// are crow-flies, and an unreachable source must read as unknown.
+console.log("\n2. nearby_amenities — ce qu'il y a autour (OpenStreetMap)");
+const aroundStart = Date.now();
+const around = await call("nearby_amenities", { address: ADDRESS, radius_m: 800, limit: 2 });
+if (around.isError) {
+  failures++;
+  console.log(`  ✗ appel en erreur : ${first(around)}`);
+} else {
+  const s = around.structuredContent;
+  console.log(`   available=${s.available}  rayon=${s.radius_m} m  point=${s.point.lat.toFixed(5)},${s.point.lon.toFixed(5)}   (${Date.now() - aroundStart} ms)`);
+  for (const c of s.categories) {
+    const near = c.nearest.map((p) => `${p.name ?? "(sans nom)"} ${p.type} ${p.distance_m} m`).join(" | ");
+    console.log(
+      `   ${pad(c.key, 10)} count=${padStart(nf(c.count), 4)}  plus proche=${padStart(nf(c.nearest_distance_m), 4)} m  → ${near || "—"}`,
+    );
+  }
+  expect("nearby_amenities", "les 5 catégories sont toujours répondues", s.categories.length === 5);
+  // The rule that matters: a source outage gives null counts, an empty
+  // neighbourhood gives zeros — the two must never look alike.
+  expect(
+    "nearby_amenities",
+    "source injoignable = count null (inconnu), jamais 0",
+    s.available
+      ? s.categories.every((c) => c.count !== null)
+      : s.categories.every((c) => c.count === null && c.nearest.length === 0),
+  );
+  if (s.available) {
+    const sorted = s.categories.every((c) => c.nearest.every((p, i) => i === 0 || c.nearest[i - 1].distance_m <= p.distance_m));
+    const coherent = s.categories.every((c) => (c.count === 0 ? c.nearest_distance_m === null : c.nearest[0].distance_m === c.nearest_distance_m));
+    expect("nearby_amenities", "distances croissantes et cohérentes avec count", sorted && coherent);
+    expect(
+      "nearby_amenities",
+      "chaque POI est traçable à son objet OSM",
+      s.categories.every((c) => c.nearest.every((p) => /^(node|way|relation)\/\d+$/.test(p.osm))),
+    );
+    expect("nearby_amenities", "au moins une catégorie est renseignée en ville", s.categories.some((c) => c.count > 0));
+  }
+}
+
+// 3 --------------------------------------------------------------------------
 // compare_properties: 2–5 addresses side by side, one row each, rankings as
 // row indices.
-console.log("\n2. compare_properties — deux adresses côte à côte");
+console.log("\n3. compare_properties — deux adresses côte à côte");
 let t = Date.now();
 const cmp = await call("compare_properties", {
   targets: [
@@ -134,7 +175,7 @@ if (cmp.isError) {
 // 3 --------------------------------------------------------------------------
 // search_by_budget: the inverse search — what a budget reaches, commune by
 // commune, with thin-data communes excluded rather than ranked last.
-console.log(`\n3. search_by_budget — ce qu'un budget de ${nf(BUDGET)} € atteint dans le département ${ZONE}`);
+console.log(`\n4. search_by_budget — ce qu'un budget de ${nf(BUDGET)} € atteint dans le département ${ZONE}`);
 t = Date.now();
 const budget = await call("search_by_budget", {
   budget_eur: BUDGET,
@@ -187,7 +228,7 @@ if (budget.isError) {
 
 // 4 --------------------------------------------------------------------------
 // property_report format=markdown: the dossier as a shareable fiche.
-console.log("\n4. property_report format=markdown — une fiche partageable");
+console.log("\n5. property_report format=markdown — une fiche partageable");
 const md = await call("property_report", {
   address: ADDRESS,
   type_local: "Appartement",
@@ -217,7 +258,7 @@ if (md.isError) {
 
 // 5 --------------------------------------------------------------------------
 // batch: one dossier per address, a bad address isolated.
-console.log("\n5. property_report batch — une adresse en échec n'entraîne pas le lot");
+console.log("\n6. property_report batch — une adresse en échec n'entraîne pas le lot");
 const batch = await call("property_report", {
   addresses: [OTHER, NOWHERE],
   type_local: "Appartement",
@@ -241,7 +282,7 @@ if (batch.isError) {
 
 // 6 --------------------------------------------------------------------------
 // argument rules: the message a client reads when the batch is malformed.
-console.log("\n6. property_report — messages d'erreur des lots hors bornes");
+console.log("\n7. property_report — messages d'erreur des lots hors bornes");
 for (const [label, args, expected] of [
   ["1 seule adresse", { addresses: [ADDRESS] }, "at least 2 addresses"],
   ["6 adresses", { addresses: Array(6).fill(ADDRESS) }, "at most 5 addresses"],

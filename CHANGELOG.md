@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.8.0 — 2026-10-09
+
+### Added
+
+- **`nearby_amenities`, the 21st tool.** What is around a French address, from
+  OpenStreetMap through the Overpass API: public transport (train, metro, tram,
+  bus stop), schools and higher education, everyday shops, health (pharmacy,
+  doctor, hospital) and green / sport space. For each category it returns how
+  many objects fall within the radius (100 m – 5 km, default 1 km) and the
+  closest ones, in metres as the crow flies, each one carrying its OSM id so a
+  claim can be checked at the source. Two Overpass mirrors are tried in order;
+  when neither answers, every `count` is `null` — UNKNOWN, never an empty
+  neighbourhood. Query clauses and category classification are derived from one
+  table (`src/apis/overpass.ts`), so a category cannot be queried without being
+  classified. Source: OpenStreetMap contributors, ODbL.
+- README documents the tool, its ODbL attribution and the honesty rule, and the
+  skill tells a client never to read an empty category as a real absence;
+  `npm run smoke` and `npm run examples` now cover it live.
+
 ## 1.7.0 — 2026-10-09
 
 ### Added

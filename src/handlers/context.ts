@@ -7,6 +7,13 @@ import { communeByCode, communesByName } from "../apis/communes.js";
 import { parcelsAtPoint, CADASTRE_SOURCE, CADASTRE_SOURCE_URL } from "../apis/cadastre.js";
 import { zonesAtPoint, prescriptionsAtPoint, GPU_SOURCE, GPU_SOURCE_URL } from "../apis/gpu.js";
 import { irisAtPoint, IRIS_SOURCE, IRIS_SOURCE_URL } from "../apis/iris.js";
+import {
+  fetchNearby,
+  nearestByCategory,
+  unavailableAmenities,
+  OSM_SOURCE,
+  OSM_LICENSE_URL,
+} from "../apis/overpass.js";
 import { rentControlAtPoint } from "../apis/rent_control.js";
 import { reverseGeocode } from "../apis/ban.js";
 import { round } from "../util/stats.js";
@@ -225,6 +232,49 @@ export async function irisLookup(args: { address: string }) {
     caveats: [
       "This boundary layer publishes no income, population or poverty figure — only identity (code, name, type).",
       "INSEE's IRIS socio-demographic tables are not exposed through an anonymous API, so they are left to be joined rather than approximated here.",
+    ],
+  };
+}
+
+/**
+ * What is around an address: stations, schools, shops, health, green space —
+ * from OpenStreetMap through Overpass. For a buyer this is the criterion no
+ * official French dataset answers directly, and it is deliberately its own tool
+ * rather than a report section: it is a different question, it costs a heavier
+ * upstream call, and it is useful on its own.
+ */
+export async function nearbyAmenities(args: {
+  address?: string;
+  lat?: number;
+  lon?: number;
+  radius_m?: number;
+  limit?: number;
+}) {
+  const { lat, lon, resolved } = await resolvePoint(args);
+  const radiusM = Math.min(Math.max(args.radius_m ?? 1000, 100), 5000);
+  const limit = Math.min(Math.max(args.limit ?? 3, 1), 5);
+  const nearby = await fetchNearby(lat, lon, radiusM);
+
+  return {
+    source: OSM_SOURCE,
+    source_url: OSM_LICENSE_URL,
+    resolved_address: resolved,
+    point: { lat, lon },
+    radius_m: radiusM,
+    // An outage answers every category as unknown (null count), never as an
+    // empty neighbourhood: "no school nearby" is a buying decision.
+    available: nearby.available,
+    categories: nearby.available
+      ? nearestByCategory(nearby.elements, lat, lon, limit)
+      : unavailableAmenities(),
+    unavailable: nearby.unavailable,
+    note: nearby.available
+      ? "Distances are straight-line (as the crow flies) from the point, in meters, measured to the OSM centre of each object. `count` is how many matching objects the radius query returned — an area such as a park or a station building is one object, placed at its centre — and `nearest` lists the closest. OSM is contributed data, so a missing POI is not proof it does not exist."
+      : "Overpass could not be reached, so the surroundings are UNKNOWN — not empty. A null `count` here does not mean nothing is nearby.",
+    caveats: [
+      "OpenStreetMap is community data (ODbL): coverage is uneven, and a sparse category can reflect missing tags rather than a real absence.",
+      "Straight-line distance flatters a walk: rivers, railways and one-way streets add to the real itinerary — check the route before concluding.",
+      "Proximity is context, not a price: this states what is around an address, never what the address is worth.",
     ],
   };
 }

@@ -4545,6 +4545,197 @@
     }
   },
   {
+    "name": "nearby_amenities",
+    "title": "What is around an address (POIs)",
+    "description": "Nearby points of interest around a French address or point, from OpenStreetMap: public transport (train, metro, tram, bus stop), schools and higher education, everyday shops, health (pharmacy, doctor, hospital) and green/sport space — each with how many are within the radius and the closest ones, in metres as the crow flies. Answers the neighbourhood question no official French dataset covers directly. When Overpass is unreachable, every count is UNKNOWN (null) rather than zero. Source: OpenStreetMap contributors (ODbL), via the Overpass API.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "Address in France (alternative to lat/lon)"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        },
+        "radius_m": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 5000,
+          "description": "Search radius in meters around the point (default 1000)"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "How many closest POIs to list per category (default 3)"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "resolved_address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "point": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "additionalProperties": true
+        },
+        "radius_m": {
+          "type": "number"
+        },
+        "available": {
+          "type": "boolean",
+          "description": "false: Overpass unreachable, so every count is UNKNOWN — not zero"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "count": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Matching objects found within the radius; null = source unreachable, which is NOT zero"
+              },
+              "nearest_distance_m": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nearest": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "OSM tag value that matched: tram_stop, pharmacy, university…"
+                    },
+                    "distance_m": {
+                      "type": "number",
+                      "description": "Straight-line distance in meters"
+                    },
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lon": {
+                      "type": "number"
+                    },
+                    "osm": {
+                      "type": "string",
+                      "description": "OSM object id such as \"node/123456\", to check the claim at the source"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "type",
+                    "distance_m",
+                    "lat",
+                    "lon",
+                    "osm"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "count",
+              "nearest_distance_m",
+              "nearest"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "unavailable": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "portal_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "reason",
+            "portal_url"
+          ],
+          "additionalProperties": true
+        },
+        "note": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "source",
+        "source_url",
+        "resolved_address",
+        "point",
+        "radius_m",
+        "available",
+        "categories",
+        "note",
+        "caveats"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
     "name": "rent_control",
     "title": "Rent-control reference rents",
     "description": "Loyer de référence, loyer de référence majoré (the legal ceiling) and minoré, in €/m²/month, for a rent-controlled area — by number of rooms, construction period and furnished status. Covers only the areas whose authority publishes an open grid (Paris, Métropole de Lyon); the response states explicitly when an address is not covered instead of guessing. Sources: Ville de Paris, Métropole de Lyon.",

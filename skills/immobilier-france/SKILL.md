@@ -5,7 +5,7 @@ description: Répondre à une question immobilière française (prix, vente, est
 
 # Données immobilières françaises en open data
 
-Ce plugin branche le serveur MCP `mcp-immo-olv` : 20 outils, sources publiques
+Ce plugin branche le serveur MCP `mcp-immo-olv` : 21 outils, sources publiques
 françaises, **aucune clé API**. Ton rôle est de choisir le bon outil, de ne
 jamais inventer un chiffre, et de publier les limites que la réponse expose.
 
@@ -26,6 +26,7 @@ jamais inventer un chiffre, et de publier les limites que la réponse expose.
 | « Est-ce que je peux construire / agrandir ? » | `urbanism_zoning` |
 | « Quelle est cette parcelle ? » | `cadastral_parcel` |
 | « Quel quartier INSEE ? » | `iris_lookup` |
+| « Qu'est-ce qu'il y a autour : gare, école, commerces, hôpital ? » | `nearby_amenities` (distances à vol d'oiseau, à confirmer par un itinéraire) |
 | « Combien d'habitants, quel département ? » | `commune_info` |
 | « Quelle adresse pour ce GPS ? » / adresse ambiguë | `geocode_address`, `reverse_geocode` |
 
@@ -53,6 +54,10 @@ Si l'adresse n'est pas parfaitement identifiée, résous-la d'abord avec
 - **Cadastre : pas de propriétaire.** L'outil donne parcelle et contenance fiscale
   (terrain compris), jamais le propriétaire, et la contenance n'est pas la surface
   habitable.
+- **OpenStreetMap = données contributives.** `nearby_amenities` reflète ce que la
+  communauté a renseigné : une catégorie vide n'est pas une preuve d'absence (des
+  tags manquent). Et si Overpass ne répond pas, chaque `count` vaut `null` :
+  c'est **inconnu**, jamais « rien autour ». Les distances sont à vol d'oiseau.
 
 ## Sensibilité des sources
 
