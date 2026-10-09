@@ -3,9 +3,9 @@
 **Données immobilières françaises issues de l'open data public**
 À partir d'une adresse, un client MCP peut consulter les ventes notariées (DVF), obtenir une estimation par comparables, les loyers d'annonce, une indication de la taxe foncière, les DPE, les risques Géorisques et le profil INSEE de la commune — sans clé API.. 
 
-## Pourquoi
+## L'objet de ce MCP, produire des données à partir de sources fiables
 
-Les portails affichent des prix demandés et des estimations opaques. Les données
+Les portails immobiliers affichent parfois des prix demandés et des estimations opaques. Les données
 publiques françaises offrent mieux : actes notariés DVF, diagnostics ADEME,
 indicateurs de loyer, fiscalité locale REI, risques et référentiels d'adresses.
 `mcp-immo-olv` les relie dans des réponses auditables.
@@ -14,18 +14,64 @@ Chaque chiffre expose sa source, sa portée et ses limites. Une estimation reste
 une analyse d'open data, **pas un avis de valeur professionnel ni un conseil
 financier**.
 
-## Installation locale
+## Modalités de connexion
 
-Node.js 18 ou plus récent est requis.
+Prérequis unique : **Node.js 18 ou plus récent**. Aucune clé API, aucun compte.
+Le serveur tourne en local, en `stdio` : rien n'est exposé sur le réseau.
+
+| Votre contexte | Connexion en une ligne |
+|---|---|
+| **Claude Code** | `claude mcp add immo-olv -- npx -y mcp-immo-olv@latest` |
+| **Cline** | `cline mcp add immo-olv --yes -- npx -y mcp-immo-olv@latest` |
+| **Autre client MCP** | copier le bloc JSON ci-dessous dans `mcpServers` |
+| **Registre MCP officiel** | serveur `io.github.OlivierLAVAUD/mcp-immo` |
+| **Aucun client MCP** | console web locale : `npm run dev` → http://localhost:5173 |
+
+### 1. Claude Code
 
 ```bash
-npm install
-npm run build
-node dist/index.js
+claude mcp add immo-olv -- npx -y mcp-immo-olv@latest
 ```
 
+Vérifier avec `claude mcp list` : `immo-olv` doit y figurer. Pour les commandes
+`/immo-olv:rapport`, `/immo-olv:estimation` et `/immo-olv:risques`, installez le
+plugin (voir [Installer en plugin Claude Code](#installer-en-plugin-claude-code)).
 
-## Installler avec la configuration générique :
+### 2. Cline
+
+**En une commande** (CLI `cline`) :
+
+```bash
+cline mcp add immo-olv --yes -- npx -y mcp-immo-olv@latest
+```
+
+Sans `--yes`, la commande ouvre l'assistant d'ajout avec ces champs pré-remplis.
+Vérifier avec `cline config mcp` : `immo-olv` doit y figurer, actif.
+
+**Depuis l'IDE** : dans le panneau Cline, icône *MCP Servers* (barre d'outils) →
+onglet *Configure* → bouton *Configure MCP Servers*, puis ajouter dans `mcpServers` :
+
+```json
+{
+  "mcpServers": {
+    "immo-olv": {
+      "command": "npx",
+      "args": ["-y", "mcp-immo-olv@latest"],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+L'extension ouvre son propre fichier de réglages MCP ; la CLI, elle, lit
+`~/.cline/data/settings/cline_mcp_settings.json` (surcharge possible avec la
+variable `CLINE_MCP_SETTINGS_PATH`). Ensuite, redémarrer Cline : les 16 outils
+apparaissent dans la liste MCP.
+
+### 3. Tout autre client MCP
+
+Copier ce bloc dans la configuration du client (`mcpServers`) :
 
 ```json
 {
@@ -37,6 +83,52 @@ node dist/index.js
   }
 }
 ```
+
+Redémarrer le client : les 16 outils apparaissent dans sa liste d'outils MCP.
+
+### 4. Depuis ce dépôt (développement)
+
+```bash
+npm install
+npm run build
+```
+
+Pointer ensuite le client sur le build local au lieu du paquet publié :
+
+```json
+{
+  "mcpServers": {
+    "immo-olv": {
+      "command": "node",
+      "args": ["/chemin/vers/mcp-immo-olv/dist/index.js"]
+    }
+  }
+}
+```
+
+Équivalent en une commande avec Claude Code :
+
+```bash
+claude mcp add immo-olv -- node /chemin/vers/mcp-immo-olv/dist/index.js
+```
+
+Le serveur se lance aussi seul, mais il attend un client sur stdin :
+
+```bash
+node dist/index.js
+```
+
+### 5. Console web (sans client MCP)
+
+```bash
+npm --prefix ui install
+npm run build        # le pont a besoin de dist/index.js
+npm run dev          # console : http://localhost:5173
+```
+
+Sans rien installer, un client compatible résout le serveur depuis le registre
+MCP officiel sous le nom `io.github.OlivierLAVAUD/mcp-immo` — voir
+[Installer depuis le registre MCP](#installer-depuis-le-registre-mcp).
 
 ## Installer depuis le registre MCP
 
