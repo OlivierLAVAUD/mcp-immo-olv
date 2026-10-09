@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.1 — 2026-10-10
+
+### Changed
+
+- Release plumbing only, no code change since 1.8.0. A tag now publishes to npm
+  through GitHub Actions **trusted publishing** (OIDC) instead of a stored token,
+  and npm generates a provenance attestation for the published package. This
+  release exists to validate that trusted-publisher configuration against
+  `publish.yml`; it also carries the repository re-creation that dropped the
+  legacy commit objects, so older commit URLs no longer resolve.
+
 ## 1.8.0 — 2026-10-09
 
 ### Added
