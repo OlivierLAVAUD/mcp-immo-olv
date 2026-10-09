@@ -270,22 +270,30 @@ donne une MAPE d'environ 21 %, un biais de +8 % et une couverture de 52,5 %.
 
 ## Sources, licences et limites
 
+Chaque jeu renvoie à sa page de référence officielle (le nom du jeu est un lien) ;
+les URL que le serveur renvoie dans une réponse — `source_url`, `officialReportUrl`,
+`unavailable.portal_url` — sont vérifiées en direct par `npm run smoke`.
+
 | Jeu | Producteur | Usage dans le serveur |
 |---|---|---|
-| DVF géolocalisées | DGFiP / Etalab | Ventes 2021 → présent ; **aucune source géolocalisée avant 2021** ; pas d'Alsace-Moselle ni Mayotte ; délai de publication |
-| Carte des loyers | Ministère du Logement / ANIL | Loyer d'annonce modélisé, charges comprises ; pas un loyer de référence réglementé |
-| Encadrement des loyers | Ville de Paris, Métropole de Lyon | Loyers de référence des zones couvertes uniquement ; « non couvert » est renvoyé explicitement ailleurs |
-| REI | DGFiP, exposé par OFGL | Fiscalité locale agrégée ; moyenne par article, jamais taxe individuelle |
-| DPE logements existants et neufs | ADEME | Diagnostics `dpe03existant` et `dpe02neuf`, chacun étiqueté par registre |
-| Cadastre (PCI) | IGN / DGFiP | Parcelle, `idu` et contenance ; jamais la propriété ni le droit de construire |
-| Géoportail de l'urbanisme | DGALN / IGN | Zonage et prescriptions opposables ; les communes sans PLU en sont absentes |
-| CONTOURS-IRIS / ADMINEXPRESS | IGN (source INSEE) | Identité de l'IRIS ; aucune donnée socio-démographique dans cette couche |
-| Géorisques | Ministère de la Transition écologique | Rapport de risques officiel ; si leur API ne répond pas, la réponse porte `available: false` et le dit explicitement au lieu de renvoyer une liste vide |
-| OpenStreetMap (via Overpass) | Contributeurs OSM, ODbL | Points d'intérêt autour d'une adresse ; couverture communautaire, donc inégale, et un `count` nul quand Overpass ne répond pas signifie **inconnu**, jamais « rien autour » |
-| BAN / geo.api.gouv.fr | IGN / DINUM / INSEE | Adresses et unités administratives |
+| [DVF géolocalisées](https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/) | DGFiP / Etalab | Ventes 2021 → présent ; **aucune source géolocalisée avant 2021** ; pas d'Alsace-Moselle ni Mayotte ; délai de publication |
+| [Carte des loyers](https://www.data.gouv.fr/fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2025/) | Ministère du Logement / ANIL | Loyer d'annonce modélisé, charges comprises ; pas un loyer de référence réglementé |
+| Encadrement des loyers | [Ville de Paris](https://www.paris.fr/pages/l-encadrement-des-loyers-parisiens-en-vigueur-le-1er-aout-2712) et [Métropole de Lyon](https://www.grandlyon.com/mes-services-au-quotidien/se-loger-ameliorer-ou-louer-son-logement/sinformer-sur-lencadrement-des-loyers) | Loyers de référence des zones couvertes uniquement ; « non couvert » est renvoyé explicitement ailleurs |
+| [REI](https://data.ofgl.fr/explore/dataset/rei/) | DGFiP, exposé par OFGL | Fiscalité locale agrégée ; moyenne par article, jamais taxe individuelle |
+| [DPE logements existants](https://data.ademe.fr/datasets/dpe-v2-logements-existants) et [neufs](https://data.ademe.fr/datasets/dpe-v2-logements-neufs) | ADEME | Diagnostics `dpe03existant` et `dpe02neuf`, chacun étiqueté par registre |
+| [Cadastre (PCI)](https://cadastre.data.gouv.fr/) | IGN / DGFiP ([API Carto](https://apicarto.ign.fr/api/doc/cadastre)) | Parcelle, `idu` et contenance ; jamais la propriété ni le droit de construire |
+| [Géoportail de l'urbanisme](https://www.geoportail-urbanisme.gouv.fr/) | DGALN / IGN ([API Carto](https://apicarto.ign.fr/api/doc/gpu)) | Zonage et prescriptions opposables ; les communes sans PLU en sont absentes |
+| [CONTOURS-IRIS / ADMINEXPRESS](https://geoservices.ign.fr/adminexpress) | IGN (source INSEE) | Identité de l'IRIS ; aucune donnée socio-démographique dans cette couche |
+| [Géorisques](https://www.georisques.gouv.fr/) | Ministère de la Transition écologique | Rapport de risques officiel ; si leur API ne répond pas, la réponse porte `available: false` et le dit explicitement au lieu de renvoyer une liste vide |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) (via [Overpass](https://wiki.openstreetmap.org/wiki/Overpass_API)) | Contributeurs OSM, ODbL | Points d'intérêt autour d'une adresse ; couverture communautaire, donc inégale, et un `count` nul quand Overpass ne répond pas signifie **inconnu**, jamais « rien autour » |
+| [BAN](https://adresse.data.gouv.fr/) / [geo.api.gouv.fr](https://geo.api.gouv.fr/) | IGN / DINUM / INSEE | Adresses et unités administratives |
 
-Les jeux publics sont interrogés en direct, sans clé API. Le cache mémoire DVF
-réduit la latence et les appels répétés, mais est vidé au redémarrage.
+Licences : Licence Ouverte / Open Licence (Etalab) pour les jeux de l'État cités
+ici, ODbL pour OpenStreetMap ; certains jeux de collectivités ont leur propre
+licence, à vérifier sur la fiche du jeu avant réutilisation. La source doit être
+citée dès qu'une réponse est reprise. Les jeux publics sont interrogés en direct,
+sans clé API. Le cache mémoire DVF réduit la latence et les appels répétés, mais
+est vidé au redémarrage.
 
 ## Développement
 

@@ -63,8 +63,10 @@ const isFurnishedLabel = (label: string): boolean => /meubl|furnish/i.test(label
 
 const PARIS_RECORDS_URL =
   "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/logement-encadrement-des-loyers/records";
+// Checked live by the smoke test: a source URL we hand to a client is a
+// deliverable, and the previous paris.fr path had gone 404.
 export const PARIS_RENT_CONTROL_URL =
-  "https://www.paris.fr/pages/l-encadrement-des-loyers-5995";
+  "https://www.paris.fr/pages/l-encadrement-des-loyers-parisiens-en-vigueur-le-1er-aout-2712";
 
 export interface ParisRentRecord {
   annee?: string;
@@ -166,7 +168,8 @@ export async function parisRentControl(
 const DATA_GOUV_SEARCH =
   "https://www.data.gouv.fr/api/1/datasets/?q=Encadrement%20des%20loyers%20M%C3%A9tropole%20de%20Lyon&page_size=20";
 const LYON_WFS_BASE = "https://data.grandlyon.com/geoserver/metropole-de-lyon/ows";
-export const LYON_RENT_CONTROL_URL = "https://www.grandlyon.com/services/encadrement-des-loyers";
+export const LYON_RENT_CONTROL_URL =
+  "https://www.grandlyon.com/mes-services-au-quotidien/se-loger-ameliorer-ou-louer-son-logement/sinformer-sur-lencadrement-des-loyers";
 
 export interface LyonValue {
   loyer_reference?: number;

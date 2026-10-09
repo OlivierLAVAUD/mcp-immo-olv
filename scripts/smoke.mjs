@@ -20,6 +20,7 @@ import {
   communeInfo,
 } from "../dist/handlers.js";
 import { OUTPUT_SCHEMAS } from "../dist/output-schemas.js";
+import { PARIS_RENT_CONTROL_URL, LYON_RENT_CONTROL_URL } from "../dist/apis/rent_control.js";
 
 const ADDRESS = process.argv[2] ?? "12 rue de la République Lyon";
 let failures = 0;
@@ -284,6 +285,52 @@ if (backtest) {
   console.log(
     `  → MAPE ${backtest.overall.mape_pct} %, bias ${backtest.overall.bias_pct} %, range coverage ${backtest.overall.interval_coverage_pct} % over ${backtest.evaluated} sales`,
   );
+}
+
+// ------------------------------------------------- documented source URLs
+//
+// Every `source_url` / `officialReportUrl` / `portal_url` the server hands to a
+// client is part of the answer: two of them (paris.fr and grandlyon.com) had
+// gone 404 without any test noticing, because nothing ever fetched them. Only
+// a definitive 404/410 fails: a 5xx or a timeout is upstream trouble on their
+// side, which would otherwise make this check flaky for the wrong reason.
+console.log("\nsource URLs we hand to a client");
+// Deduplicated by URL: the Paris constant is also the one the live call emits.
+const emitted = new Map([
+  [risks?.officialReportUrl ?? risks?.unavailable?.portal_url, "Géorisques portal"],
+  [amenities?.source_url, "OpenStreetMap"],
+  [cadastre?.source_url, "Cadastre API Carto"],
+  [urbanism?.source_url, "Géoportail de l'urbanisme"],
+  [neighbourhood?.source_url, "IRIS ADMINEXPRESS"],
+  [rentControlled?.source_url, "Encadrement des loyers (Paris)"],
+  // Both constants, so the Lyon grid is checked even though this run queries Paris.
+  [PARIS_RENT_CONTROL_URL, "Encadrement des loyers (Paris, constante)"],
+  [LYON_RENT_CONTROL_URL, "Encadrement des loyers (Lyon, constante)"],
+].filter(([url]) => typeof url === "string" && url.startsWith("http")));
+
+for (const [url, label] of emitted) {
+  let status = null;
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      redirect: "follow",
+      headers: { "User-Agent": "mcp-immo-olv smoke test" },
+      signal: AbortSignal.timeout(20_000),
+    });
+    status = res.status;
+  } catch {
+    status = null; // blocked, DNS, timeout: not a claim that the URL is wrong
+  }
+  if (status === 404 || status === 410) {
+    failures++;
+    console.log(`✗ ${label}: HTTP ${status} — ${url}`);
+  } else {
+    console.log(`✓ ${label}: HTTP ${status ?? "indéterminé"}`);
+  }
+}
+if (emitted.size === 0) {
+  failures++;
+  console.log("✗ no source URL emitted — nothing to check");
 }
 
 console.log(failures === 0 ? "\nAll smoke checks passed." : `\n${failures} smoke check(s) FAILED.`);

@@ -59,6 +59,11 @@
 - A batch outside its 2–5 bound now fails with an actionable message naming the
   limit (`property_report.addresses`, `compare_properties.targets`) instead of a
   raw `Array must contain at least 2 element(s)` zod violation.
+- Two source URLs handed to clients in `rent_control.source_url` had gone 404
+  (`paris.fr`, `grandlyon.com`); both now point at the live official pages, and
+  `npm run smoke` HEADs every source URL the server emits, failing on a
+  definitive 404/410 while treating a 5xx or a timeout as upstream trouble. The
+  README sources table links each dataset to its official reference page.
 
 ### Verification by example
 
