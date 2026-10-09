@@ -23,6 +23,18 @@ export async function communeByCode(inseeCode: string): Promise<CommuneInfo> {
   return fetchJson<CommuneInfo>(`${BASE}/communes/${code}?fields=${FIELDS}`);
 }
 
+/**
+ * All communes of a département, most populous first. Powers the budget
+ * search: the département is the widest useful "zone" a renter can name, and
+ * geo.api.gouv.fr lists its communes in one call.
+ */
+export async function communesByDepartement(code: string): Promise<CommuneInfo[]> {
+  const communes = await fetchJson<CommuneInfo[]>(
+    `${BASE}/communes?codeDepartement=${code}&fields=${FIELDS}&limit=1000`,
+  );
+  return communes.sort((a, b) => (b.population ?? 0) - (a.population ?? 0));
+}
+
 export async function communesByName(name: string, limit = 5): Promise<CommuneInfo[]> {
   const url = `${BASE}/communes?nom=${encodeURIComponent(name)}&fields=${FIELDS}&limit=${limit}&boost=population`;
   return fetchJson<CommuneInfo[]>(url);

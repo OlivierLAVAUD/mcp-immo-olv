@@ -585,6 +585,51 @@ const acquisitionCostsOutput = obj({
   }),
 });
 
+/* ----------------------------------------------------------------- budget */
+
+const searchByBudgetOutput = obj({
+  budget_eur: z.number(),
+  type_local: z.string(),
+  zone: obj({
+    input: z.string(),
+    resolved: z.string(),
+    departement: z.string(),
+    communes_scanned: z.number(),
+  }),
+  years_used: z.array(z.number()),
+  communes: z.array(
+    obj({
+      insee_code: z.string(),
+      name: z.string(),
+      postcodes: z.array(z.string()),
+      population: z.number().nullable(),
+      price: obj({
+        median_eur_m2_last_12m: z.number().nullable(),
+        median_eur_m2_all_period: z.number(),
+        sales_last_12m: z.number(),
+        sales_all_period: z.number(),
+      }),
+      surface: obj({ max_surface_m2: z.number().nullable() }),
+      rent: obj({
+        indicator_used: z.string(),
+        rent_eur_m2_month: z.number().nullable(),
+        estimated_monthly_rent_eur: z.number().nullable(),
+      }),
+      gross_yield_pct: z.number().nullable(),
+      below_min_surface: z.boolean(),
+    }),
+  ),
+  rankings: obj({
+    most_surface: z.array(z.number()).describe("Indices into communes, most surface per euro first"),
+    best_gross_yield_pct: z.array(z.number()),
+    cheapest_eur_m2: z.array(z.number()),
+  }),
+  not_enough_data: z.array(obj({ insee_code: z.string(), name: z.string(), sales: z.number() })),
+  errors: z.array(obj({ insee_code: z.string(), name: z.string(), reason: z.string() })),
+  note: z.string(),
+  caveats: z.array(z.string()),
+});
+
 /* -------------------------------------------------------------- registry */
 
 /**
@@ -615,6 +660,7 @@ export const OUTPUT_SCHEMAS = {
   rent_control: rentControlOutput,
   compare_properties: comparePropertiesOutput,
   acquisition_costs: acquisitionCostsOutput,
+  search_by_budget: searchByBudgetOutput,
 } satisfies Record<string, z.AnyZodObject>;
 
 export type ToolName = keyof typeof OUTPUT_SCHEMAS;

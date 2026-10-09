@@ -8,5 +8,6 @@ export * from "./handlers/market.js";
 export * from "./handlers/compare.js";
 export * from "./handlers/valuation.js";
 export * from "./handlers/acquisition.js";
+export * from "./handlers/budget.js";
 export * from "./handlers/context.js";
 export * from "./handlers/report.js";

@@ -26,6 +26,7 @@ import {
   whatIsHere,
   compareProperties,
   acquisitionCosts,
+  searchByBudget,
 } from "./handlers.js";
 import { OUTPUT_SCHEMAS } from "./output-schemas.js";
 import { VERSION } from "./version.js";
@@ -419,6 +420,26 @@ export function createServer(): McpServer {
       outputSchema: OUTPUT_SCHEMAS.acquisition_costs,
     },
     wrap(acquisitionCosts),
+  );
+
+  server.registerTool(
+    "search_by_budget",
+    {
+      title: "Find what a budget can buy in a zone",
+      description:
+        "The inverse of the estimator: 'with 300 k€, where can I buy?' For each commune of a département it computes the median €/m² from actual notarized sales (DVF, last 4 published years), divides the budget by it to get the surface the budget buys, and layers the modelled asking rent for the gross yield. Returns the qualifying communes ranked by surface, yield and price, plus the communes skipped for lack of data. The budget is the purchase price only — acquisition fees come on top (see acquisition_costs). Source: DVF, Carte des loyers, geo.api.gouv.fr.",
+      inputSchema: {
+        budget_eur: z.number().min(1000).describe("Purchase budget in €, fees excluded"),
+        type_local: z.enum(["Appartement", "Maison"]).optional().describe("Dwelling type; absent: all single-dwelling sales"),
+        zone: z
+          .string()
+          .describe("Commune name, INSEE code, address, or département code (e.g. '69', '13')"),
+        min_surface_m2: z.number().min(1).max(500).optional().describe("Minimum surface the budget must buy (default 30)"),
+        max_communes: z.number().int().min(1).max(40).optional().describe("Communes to scan, most populous first (default 15, max 40)"),
+      },
+      outputSchema: OUTPUT_SCHEMAS.search_by_budget,
+    },
+    wrap(searchByBudget),
   );
 
   return server;

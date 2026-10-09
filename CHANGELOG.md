@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.5.0 — 2026-10-09
+
+### Added
+
+- **Budget search** (`search_by_budget`, the 19th tool) — the inverse of the
+  estimator. Given a budget, a dwelling type and a zone (commune name, INSEE
+  code, address or département code), it scans the most populous communes of
+  the département, computes each median €/m² from actual notarized sales over
+  the last 4 published DVF years, and divides the budget by it: the surface
+  the budget buys. It layers the modelled asking rent for a gross yield and
+  returns three rankings — most surface, best yield, cheapest market — plus
+  the communes skipped for lack of data.
+- Honest limits, stated in the payload: the budget is the purchase price only
+  (fees come on top — `acquisition_costs` computes them), at most
+  `max_communes` (default 15) are scanned most-populous-first, and a commune
+  with too few sales is listed in `not_enough_data`, never merged into the
+  ranking. Live check on the Rhône: 300 k€ buys 67 m² in Lyon (4,4 % yield)
+  versus 123 m² in Villefranche-sur-Saône.
+- `src/handlers/budget.ts` + `communesByDepartement` in `src/apis/communes.ts`
+  + tests (`test/budget.test.ts`).
+
 ## 1.4.0 — 2026-10-09
 
 ### Added
