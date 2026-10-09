@@ -75,6 +75,22 @@ describe("summarizeRisks", () => {
     expect(summary.headline.toLowerCase()).not.toContain("installations nucléaires");
   });
 
+  it("keeps acronyms readable and never repeats the same status twice", () => {
+    const summary = summarizeRisks({
+      risks: report({
+        naturalRisks: [risk("Inondation", "Risque Existant", "Risque Existant")],
+        technologicalRisks: [risk("Sites industriels", "Risque non Concerne", null)],
+      }),
+    });
+
+    // Géorisques echoes the address status for the commune: it is one finding,
+    // not two.
+    expect(item(summary, "inondation").sentence).toBe("Inondation : signalé (Risque Existant).");
+    // The headline is lowercased mid-sentence, but an acronym must survive it.
+    expect(summary.headline).toContain("sites industriels (ICPE)");
+    expect(summary.headline).not.toContain("icpe");
+  });
+
   it("turns the DPE label into its rental status line", () => {
     const soon = summarizeRisks({
       risks: report(),

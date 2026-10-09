@@ -23,6 +23,24 @@
   envelope (`test/report.test.ts`), and the digest's present / absent / unknown
   branches (`test/risk-summary.test.ts`).
 
+### Fixed
+
+- The `risk_summary` headline no longer lowercases acronyms — it reads
+  `sites industriels (ICPE)`, not `(icpe)` — and a status Géorisques reports
+  identically at the address and in the commune is stated once instead of twice.
+  Both were visible in the live output, not caught by assertions.
+- A batch outside its 2–5 bound now fails with an actionable message naming the
+  limit (`property_report.addresses`, `compare_properties.targets`) instead of a
+  raw `Array must contain at least 2 element(s)` zod violation.
+
+### Verification by example
+
+- `npm run examples` drives the built server over the real `stdio` transport and
+  both prints and checks the live output of the three new capabilities: the risk
+  digest (including the unreachable-source branch reading **unknown**), the batch
+  envelope with a failing address isolated, and the Markdown export. README
+  carries the captured outputs under *Exemples*.
+
 ## 1.6.0 — 2026-10-09
 
 ### Added

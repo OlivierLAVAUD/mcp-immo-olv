@@ -126,6 +126,29 @@ describe("propertyReport batch form", () => {
 // ------------------------------------------------- validated through the SDK
 
 describe("propertyReport batch through the MCP server", () => {
+  it("refuses a batch outside 2–5 with an actionable message", async () => {
+    mockBanOnly();
+    const server = createServer();
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    const client = new Client({ name: "report-args-test", version: "1.0.0" }, { capabilities: {} });
+    await client.connect(clientTransport);
+
+    // The input schema rejects before the handler runs, so this is the message
+    // a client actually reads — it has to name the limit, not print a zod
+    // violation.
+    for (const [addresses, expected] of [
+      [["10 Rue Test Lyon"], "at least 2 addresses"],
+      [Array(6).fill("10 Rue Test Lyon"), "at most 5 addresses"],
+    ] as const) {
+      const res = await client.callTool({ name: "property_report", arguments: { addresses: [...addresses] } });
+      expect(res.isError).toBe(true);
+      expect(res.content[0]!.text).toContain(expected);
+    }
+
+    await server.close();
+  });
+
   it("answers with a batch envelope the declared output schema accepts", async () => {
     mockBanOnly();
     const server = createServer();

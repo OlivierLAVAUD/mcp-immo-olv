@@ -27,21 +27,36 @@ export interface RiskItem {
 interface Category {
   key: string;
   label: string;
+  /**
+   * How the category is named mid-sentence in the headline. Written out rather
+   * than derived from `label`, so an acronym survives the lowercase ("ICPE",
+   * never "icpe").
+   */
+  headline_label: string;
   /** Matches the Géorisques libellé, across both risk families. */
   match: RegExp;
 }
 
 /** The categories the digest always answers, present or not. */
 const CATEGORIES: Category[] = [
-  { key: "inondation", label: "Inondation", match: /inondation/i },
+  { key: "inondation", label: "Inondation", headline_label: "inondation", match: /inondation/i },
   {
     key: "argile",
     label: "Retrait-gonflement des argiles",
+    headline_label: "retrait-gonflement des argiles",
     match: /argile|retrait-gonflement|tassement|mouvement de terrain/i,
   },
-  { key: "radon", label: "Radon", match: /radon/i },
-  { key: "icpe", label: "Sites industriels (ICPE)", match: /industriel|icpe|industrie/i },
+  { key: "radon", label: "Radon", headline_label: "radon", match: /radon/i },
+  {
+    key: "icpe",
+    label: "Sites industriels (ICPE)",
+    headline_label: "sites industriels (ICPE)",
+    match: /industriel|icpe|industrie/i,
+  },
 ];
+
+/** Name a category uses inside the headline (keeps acronym casing). */
+const HEADLINE_LABEL = new Map(CATEGORIES.map((c) => [c.key, c.headline_label]));
 
 /** How the DPE half of the digest was obtained. */
 export type DpeState = "checked" | "not_checked" | "error";
@@ -141,7 +156,9 @@ export function summarizeRisks(input: RiskSummaryInput): RiskSummary {
 
     const at = hits.map((h) => h.statusAtAddress).find((s): s is string => Boolean(s)) ?? null;
     const inCommune = hits.map((h) => h.statusInCommune).find((s): s is string => Boolean(s)) ?? null;
-    const where = [at, inCommune].filter((s): s is string => Boolean(s));
+    // Géorisques often reports the same status at the address and in the
+    // commune; repeating it would read as two distinct findings.
+    const where = [...new Set([at, inCommune].filter((s): s is string => Boolean(s)))];
     return {
       key: cat.key,
       label: cat.label,
@@ -164,7 +181,7 @@ export function summarizeRisks(input: RiskSummaryInput): RiskSummary {
     ? "Statut de risque INCONNU : Géorisques est injoignable — ce n'est PAS une absence de risque."
     : `${riskPresent.length === 0
         ? "Aucun risque signalé par Géorisques aux catégories surveillées"
-        : `Risque(s) signalé(s) : ${riskPresent.map((i) => i.label.toLowerCase()).join(", ")}`}. ${dpe.sentence}`;
+        : `Risque(s) signalé(s) : ${riskPresent.map((i) => HEADLINE_LABEL.get(i.key) ?? i.label).join(", ")}`}. ${dpe.sentence}`;
 
   return {
     available,

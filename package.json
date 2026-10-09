@@ -26,6 +26,7 @@
     "build": "tsc",
     "test": "vitest run",
     "smoke": "npm run build && node scripts/smoke.mjs",
+    "examples": "npm run build && node scripts/examples.mjs",
     "dev": "npm --prefix ui run dev",
     "ui:build": "npm --prefix ui run build",
     "ui:start": "npm --prefix ui run start",

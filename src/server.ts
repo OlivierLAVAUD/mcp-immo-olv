@@ -197,8 +197,8 @@ export function createServer(): McpServer {
         address: z.string().optional().describe("Address in France (mutually exclusive with `addresses`)"),
         addresses: z
           .array(z.string())
-          .min(2)
-          .max(5)
+          .min(2, "A batch needs at least 2 addresses in `addresses` (pass `address` for a single dossier).")
+          .max(5, "A batch takes at most 5 addresses in `addresses`.")
           .optional()
           .describe("2 to 5 addresses to dossier in one call, for comparing neighbourhoods (mutually exclusive with `address`)"),
         type_local: typeLocalSchema(),
@@ -393,8 +393,8 @@ export function createServer(): McpServer {
               rooms: z.number().int().min(1).max(20).optional().describe("Main rooms (pièces)"),
             }),
           )
-          .min(2)
-          .max(5)
+          .min(2, "A comparison needs at least 2 targets.")
+          .max(5, "A comparison takes at most 5 targets.")
           .describe("2 to 5 addresses to compare, in your order"),
         radius_m: radiusSchema(500),
       },
