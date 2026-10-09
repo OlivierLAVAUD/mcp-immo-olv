@@ -18,6 +18,10 @@
 - README documents the tool, its ODbL attribution and the honesty rule, and the
   skill tells a client never to read an empty category as a real absence;
   `npm run smoke` and `npm run examples` now cover it live.
+- The captured example outputs move out of the README into **EXAMPLES.md** — one
+  numbered block per tool, each stating what its output proves, kept in step
+  with `npm run examples` which replays and checks them. README keeps a pointer,
+  and the file ships with the npm package so that pointer resolves on npm too.
 
 ## 1.7.0 — 2026-10-09
 
@@ -59,7 +63,7 @@
   (including the unreachable-source branch reading **unknown**), the side-by-side
   comparison, the inverse budget search, the batch envelope with a failing
   address isolated, the Markdown export, and the malformed-batch messages.
-  README carries the captured outputs under *Exemples*.
+  EXAMPLES.md carries the captured outputs.
 
 ## 1.6.0 — 2026-10-09
 
