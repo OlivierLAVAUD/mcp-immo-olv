@@ -224,6 +224,21 @@ const estimatePropertyOutput = obj({
 
 /* ----------------------------------------------------------------- context */
 
+const rentalComplianceBlock = obj({
+  energy_label: z.string().nullable().describe("Normalized DPE label used for the ruling"),
+  rental_status: z
+    .enum(["louable", "bientot_interdit", "interdit", "inconnu"])
+    .describe("Legal status of a main-residence lease at this label; inconnu = label missing, not lettable"),
+  ban_date: z.string().nullable().describe("First day a new lease is unlawful (ISO), null when none is dated"),
+  is_passoire_thermique: z.boolean(),
+});
+
+const energyCostEstimate = obj({
+  conso_kwh_year: z.number().describe("Annual primary energy from the DPE figure"),
+  energy_price_eur_kwh: z.number(),
+  annual_cost_eur: z.number(),
+});
+
 const dpeRecord = obj({
   adresse_ban: z.string().optional(),
   identifiant_ban: z.string().optional(),
@@ -235,6 +250,8 @@ const dpeRecord = obj({
   date_etablissement_dpe: z.string().optional(),
   conso_5_usages_par_m2_ep: z.number().optional().describe("Primary energy, kWh/m²/year"),
   dataset: z.enum(["existant", "neuf"]).optional(),
+  rental_compliance: rentalComplianceBlock.optional(),
+  annual_energy_cost: energyCostEstimate.nullable().optional(),
 });
 
 const dpeLookupOutput = obj({

@@ -205,7 +205,7 @@ export function createServer(): McpServer {
     {
       title: "Energy performance diagnostics (DPE)",
       description:
-        "Find official energy performance certificates (DPE: energy label A-G, GES label, surface, construction year) filed for a French address. Source: ADEME open data.",
+        "Find official energy performance certificates (DPE: energy label A-G, GES label, surface, construction year) filed for a French address, with the legal rental status at each label (décret n° 2024-501) and an estimated annual energy cost. Source: ADEME open data.",
       inputSchema: {
         address: z.string().describe("Address in France"),
         limit: z.number().int().min(1).max(50).optional().describe("Max diagnostics returned (default 10)"),
@@ -213,6 +213,12 @@ export function createServer(): McpServer {
           .enum(["all", "existant", "neuf"])
           .optional()
           .describe("DPE register: existing dwellings (dpe03existant), new dwellings (dpe02neuf), or both (default all)"),
+        energy_price_eur_kwh: z
+          .number()
+          .min(0.01)
+          .max(2)
+          .optional()
+          .describe("Tariff assumption for the energy-cost estimate in €/kWh (default 0.2562)"),
       },
       outputSchema: OUTPUT_SCHEMAS.dpe_lookup,
     },

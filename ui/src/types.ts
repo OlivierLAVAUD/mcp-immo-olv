@@ -212,6 +212,17 @@ export interface DpeRecord {
   surface_habitable_logement?: number;
   date_etablissement_dpe?: string;
   conso_5_usages_par_m2_ep?: number;
+  rental_compliance?: {
+    energy_label?: string | null;
+    rental_status?: "louable" | "bientot_interdit" | "interdit" | "inconnu";
+    ban_date?: string | null;
+    is_passoire_thermique?: boolean;
+  };
+  annual_energy_cost?: {
+    conso_kwh_year?: number;
+    energy_price_eur_kwh?: number;
+    annual_cost_eur?: number;
+  } | null;
 }
 
 export interface DpeBlock {

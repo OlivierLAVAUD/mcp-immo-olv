@@ -188,7 +188,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `rent_estimate` | Indicateurs de loyer d'annonce par segment | Carte des loyers (Ministère du Logement / ANIL) |
 | `rent_control` | Loyer de référence, plafond légal (majoré) et minoré | Encadrement des loyers (Ville de Paris, Métropole de Lyon) |
 | `property_tax_estimate` | Charge annuelle moyenne par article taxable, ventilée par composante | REI (DGFiP), via API publique OFGL |
-| `dpe_lookup` | Diagnostics de performance énergétique à l'adresse, logements existants **et** neufs | ADEME (`dpe03existant`, `dpe02neuf`) |
+| `dpe_lookup` | Diagnostics de performance énergétique à l'adresse, logements existants **et** neufs, avec statut légal de location par étiquette (décret n° 2024-501) et coût énergétique annuel estimé | ADEME (`dpe03existant`, `dpe02neuf`) |
 | `cadastral_parcel` | Parcelle cadastrale : identifiant `idu`, section, numéro, contenance officielle | PCI, IGN / DGFiP (API Carto) |
 | `urbanism_zoning` | Zone PLU (U / AU / A / N), règlement et prescriptions d'urbanisme | Géoportail de l'urbanisme (DGALN / IGN) |
 | `iris_lookup` | IRIS INSEE d'une adresse : code, nom, type, commune | CONTOURS-IRIS / ADMINEXPRESS, IGN |

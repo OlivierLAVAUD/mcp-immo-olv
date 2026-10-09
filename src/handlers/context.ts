@@ -1,4 +1,5 @@
 import { dpeByAddress, dpeByBanId, DPE_DATASET_LABELS, DPE_DATASET_ORDER } from "../apis/dpe.js";
+import { annualEnergyCost, rentalCompliance } from "../dpe-compliance.js";
 import { riskReport } from "../apis/georisques.js";
 import { communeByCode, communesByName } from "../apis/communes.js";
 import { parcelsAtPoint, CADASTRE_SOURCE, CADASTRE_SOURCE_URL } from "../apis/cadastre.js";
@@ -13,6 +14,7 @@ export async function dpeLookup(args: {
   address: string;
   limit?: number;
   dataset?: "all" | "existant" | "neuf";
+  energy_price_eur_kwh?: number;
 }) {
   const { geo } = await locate(args.address);
   const size = Math.min(args.limit ?? 10, 50);
@@ -35,7 +37,18 @@ export async function dpeLookup(args: {
         label: DPE_DATASET_LABELS[dataset],
         match,
         total_found: res.total,
-        diagnostics: res.results.map((record) => ({ ...record, dataset })),
+        diagnostics: res.results.map((record) => ({
+          ...record,
+          dataset,
+          // Rental legality is computed per diagnostic: the register can hold
+          // several vintages for one address, and only the newest counts in law.
+          rental_compliance: rentalCompliance(record.etiquette_dpe),
+          annual_energy_cost: annualEnergyCost(
+            record.conso_5_usages_par_m2_ep,
+            record.surface_habitable_logement,
+            args.energy_price_eur_kwh,
+          ),
+        })),
       };
     }),
   );
@@ -51,7 +64,7 @@ export async function dpeLookup(args: {
       total_found,
     })),
     diagnostics: perDataset.flatMap((entry) => entry.diagnostics),
-    note: "etiquette_dpe = energy label (A best – G worst), etiquette_ges = greenhouse-gas label. conso_5_usages_par_m2_ep is primary energy in kWh/m²/year. `dataset` states which register the row came from.",
+    note: "etiquette_dpe = energy label (A best – G worst), etiquette_ges = greenhouse-gas label. conso_5_usages_par_m2_ep is primary energy in kWh/m²/year. `dataset` states which register the row came from. rental_compliance gives the legal rental status of a main-residence lease at the label (décret n° 2024-501: G/H banned since 2025-01-01, F from 2028-01-01, E from 2034-01-01) — 'inconnu' means the label is missing, never that the dwelling is lettable. annual_energy_cost is the consumption figure monetised at energy_price_eur_kwh (default 0.2562 €/kWh), an order of magnitude, not a bill.",
   };
 }
 

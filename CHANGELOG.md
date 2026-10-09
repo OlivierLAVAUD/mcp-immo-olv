@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.0 — 2026-10-09
+
+### Added
+
+- **DPE rental compliance and energy cost** (`dpe_lookup`). Every diagnostic now
+  carries `rental_compliance` — the legal status of a main-residence lease at
+  its energy label, per décret n° 2024-501 (G/H banned since 2025-01-01,
+  F from 2028-01-01, E from 2034-01-01): `louable`, `bientot_interdit` with its
+  `ban_date`, `interdit`, or `inconnu` when the label is missing — never a
+  silent "lettable". Plus `is_passoire_thermique` (official F/G wording) and
+  `annual_energy_cost`, the DPE consumption monetised at a tariff assumption
+  (`energy_price_eur_kwh`, default 0.2562 €/kWh).
+- `src/dpe-compliance.ts`: pure, unit-tested module (9 tests) holding the ban
+  schedule and the cost computation, so the legal dates live in one auditable
+  place.
+
 ## 1.1.0 — 2026-09-25
 
 ### Added
