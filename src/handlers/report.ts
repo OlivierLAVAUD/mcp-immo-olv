@@ -1,4 +1,4 @@
-import { locate } from "./shared.js";
+import { locate, section } from "./shared.js";
 import {
   pricePerM2,
   propertySales,
@@ -29,14 +29,6 @@ export async function propertyReport(args: {
   rooms?: number;
 }) {
   const { geo } = await locate(args.address);
-
-  const section = async <T>(fn: () => Promise<T>): Promise<T | { error: string }> => {
-    try {
-      return await fn();
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : String(e) };
-    }
-  };
 
   const wantValuation = args.type_local !== undefined && args.surface_m2 !== undefined;
   const [

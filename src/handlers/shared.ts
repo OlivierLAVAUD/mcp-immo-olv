@@ -114,3 +114,17 @@ export async function resolvePoint(
   }
   return { lat, lon, resolved };
 }
+
+/**
+ * Run one section of a multi-section answer so its failure degrades to
+ * `{ error }` instead of taking the whole response down. Shared by
+ * `property_report` and `compare_properties`: a Géorisques outage must not
+ * kill the market analysis.
+ */
+export async function section<T>(fn: () => Promise<T>): Promise<T | { error: string }> {
+  try {
+    return await fn();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}

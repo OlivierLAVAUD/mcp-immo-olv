@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.0 — 2026-10-09
+
+### Added
+
+- **Side-by-side address comparison** (`compare_properties`, the 17th tool).
+  Compares 2 to 5 addresses in one call — current market level (€/m²), the
+  comparables estimate with confidence, asking rents, the latest DPE with its
+  legal rental status and energy cost — plus row-index rankings (cheapest
+  market, best yield). Reuses the individual tools' handlers so the numbers
+  cannot drift, and degrades per section like `property_report`. The isolation
+  helper moved into the shared handlers so both tools use the same one.
+- `src/handlers/compare.ts`: composition + pure `buildRankings` (tests in
+  `test/compare.test.ts`, including a two-cluster end-to-end comparison and a
+  dead-address degradation case).
+
 ## 1.2.0 — 2026-10-09
 
 ### Added

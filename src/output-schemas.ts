@@ -499,6 +499,63 @@ const propertyReportOutput = obj({
   generated_from: z.string(),
 });
 
+/* --------------------------------------------------------------- compare */
+
+const compareRow = obj({
+  input: obj({
+    address: z.string(),
+    type_local: z.string().nullable(),
+    surface_m2: z.number().nullable(),
+    rooms: z.number().nullable(),
+  }),
+  resolved_address: z.string().nullable(),
+  market: obj({
+    median_eur_m2_last_12m: z.number().nullable(),
+    sales_last_12m: z.number().nullable(),
+    median_eur_m2_all_period: z.number().nullable(),
+  }),
+  valuation: obj({
+    value_eur: obj({ estimate: z.number(), low: z.number(), high: z.number() }),
+    confidence,
+    comps_used: z.number(),
+    effective_sample_size: z.number(),
+    gross_yield_pct: z.number().nullable(),
+    net_yield_after_average_property_tax_pct: z.number().nullable(),
+  })
+    .nullable()
+    .describe("Null when type_local or surface_m2 was not provided for this row"),
+  rent: obj({
+    indicator_used: z.string(),
+    rent_eur_m2_month: z.number().nullable(),
+    estimated_monthly_rent_eur: z.number().nullable(),
+  }).nullable(),
+  energy: obj({
+    energy_label: z.string().nullable(),
+    rental_status: z.enum(["louable", "bientot_interdit", "interdit", "inconnu"]),
+    ban_date: z.string().nullable(),
+    is_passoire_thermique: z.boolean(),
+    annual_energy_cost_eur: z.number().nullable(),
+  }).nullable(),
+  errors: obj({
+    market: z.string().optional(),
+    valuation: z.string().optional(),
+    rent: z.string().optional(),
+    energy: z.string().optional(),
+  }),
+});
+
+const comparePropertiesOutput = obj({
+  source: z.string(),
+  query: obj({ targets_count: z.number(), radius_m: z.number() }),
+  rows: z.array(compareRow),
+  rankings: obj({
+    cheapest_eur_m2: z.array(z.number()).describe("Row indices, cheapest market median first"),
+    best_gross_yield_pct: z.array(z.number()).describe("Row indices, best valuation yield first"),
+  }),
+  note: z.string(),
+  caveats: z.array(z.string()),
+});
+
 /* -------------------------------------------------------------- registry */
 
 /**
@@ -527,6 +584,7 @@ export const OUTPUT_SCHEMAS = {
   urbanism_zoning: urbanismZoningOutput,
   iris_lookup: irisLookupOutput,
   rent_control: rentControlOutput,
+  compare_properties: comparePropertiesOutput,
 } satisfies Record<string, z.AnyZodObject>;
 
 export type ToolName = keyof typeof OUTPUT_SCHEMAS;

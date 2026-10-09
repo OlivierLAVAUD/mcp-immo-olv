@@ -181,6 +181,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | Outil | Résultat | Source |
 |---|---|---|
 | `property_report` | Dossier complet : marché, ventes, estimation, loyers, taxe, DPE, risques, commune, cadastre, PLU, IRIS, encadrement | Toutes les sources ci-dessous |
+| `compare_properties` | Comparaison côte à côte de 2 à 5 adresses : marché, estimation, loyers, DPE, classements | DVF + Carte des loyers + ADEME |
 | `estimate_property` | Estimation pondérée par comparables, fourchette, échantillon effectif, loyer et rendements | DVF + Carte des loyers + REI pour la taxe moyenne |
 | `backtest_estimator` | Backtest walk-forward du modèle : MAPE, biais, couverture des intervalles, par bande de surface et par année | DVF (DGFiP / Etalab) |
 | `property_sales` | Ventes notariées réelles autour d'une adresse ou dans une commune | DVF (DGFiP / Etalab) |

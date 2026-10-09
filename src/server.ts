@@ -24,6 +24,7 @@ import {
   naturalRisks,
   communeInfo,
   whatIsHere,
+  compareProperties,
 } from "./handlers.js";
 import { OUTPUT_SCHEMAS } from "./output-schemas.js";
 import { VERSION } from "./version.js";
@@ -353,6 +354,40 @@ export function createServer(): McpServer {
       outputSchema: OUTPUT_SCHEMAS.rent_control,
     },
     wrap(rentControl),
+  );
+
+  server.registerTool(
+    "compare_properties",
+    {
+      title: "Compare 2–5 addresses side by side",
+      description:
+        "Side-by-side comparison of 2 to 5 French addresses in one call: current market level (€/m²), comparables valuation with confidence, asking rents, DPE with legal rental status (décret n° 2024-501) and estimated energy cost, plus row-index rankings (cheapest market, best yield). Each section degrades independently, like property_report. Source: DVF, Carte des loyers, ADEME — official open data.",
+      inputSchema: {
+        targets: z
+          .array(
+            z.object({
+              address: z.string().describe("Address in France"),
+              type_local: z
+                .enum(["Appartement", "Maison"])
+                .optional()
+                .describe("Enables the valuation row; filter by dwelling type"),
+              surface_m2: z
+                .number()
+                .min(8)
+                .max(1000)
+                .optional()
+                .describe("Enables the valuation and gross-yield rows"),
+              rooms: z.number().int().min(1).max(20).optional().describe("Main rooms (pièces)"),
+            }),
+          )
+          .min(2)
+          .max(5)
+          .describe("2 to 5 addresses to compare, in your order"),
+        radius_m: radiusSchema(500),
+      },
+      outputSchema: OUTPUT_SCHEMAS.compare_properties,
+    },
+    wrap(compareProperties),
   );
 
   return server;
