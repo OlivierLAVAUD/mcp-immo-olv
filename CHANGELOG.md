@@ -4,6 +4,21 @@
 
 ### Added
 
+- **Persistent disk cache (`IMMO_CACHE_DIR`).** When the variable points at a
+  writable directory, parsed DVF commune/year rows are spilled to disk on the
+  way out of the network — including the empty answer of a missing file — and
+  the next process hydrates its memory cache from those files instead of
+  re-downloading and re-parsing: a Paris arrondissement hydrates in ~13 ms,
+  cold, where the same call cost ~530 ms on the network. No directory, no
+  behavior change — this stays process-local. Disk writes are fire-and-forget,
+  files are timestamped envelopes (TTL travels with the data), writes are
+  atomic via tmp+rename, caller keys are filename-sanitized, and folders are
+  pruned of expired files past the file cap. Any disk failure degrades silently
+  to memory-only; the tools never learn the directory existed. Covered by
+  offline tests (round-trip, TTL, corrupt file, unset or unwritable directory,
+  traversal guard, cold-start and 404-remembrance proof) and a live
+  same-number cold-start comparison.
+
 - **Streamable HTTP transport.** Setting `IMMO_HTTP_PORT` switches the same
   tool registry from stdio to the MCP Streamable HTTP transport, so the server
   can be hosted, shared or reached by a client that cannot spawn a subprocess.

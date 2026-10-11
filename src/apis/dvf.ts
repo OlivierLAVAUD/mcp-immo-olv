@@ -1,5 +1,6 @@
 import { fetchText, HttpError } from "../http.js";
 import { parseCsv } from "../util/csv.js";
+import { readDiskCache, writeDiskCache } from "../util/disk-cache.js";
 import { haversineMeters, departementFromInsee, expandPlmCodes } from "../util/geo.js";
 
 export const DVF_FIRST_YEAR = 2021;
@@ -10,11 +11,19 @@ export const DVF_FIRST_YEAR = 2021;
  * can ask for the same commune/year via several sections. Keep a separate LRU
  * of parsed rows so repeated reports avoid both network I/O and CSV parsing.
  *
- * This is process-local by design: never pretend that an in-memory cache is a
- * durable data store. A restart simply performs fresh open-data reads.
+ * Memory is only the first layer: when IMMO_CACHE_DIR points at a writable
+ * directory, parsed rows are spilled there too, so a *new* process hydrates
+ * from the filesystem after a restart instead of re-downloading and
+ * re-parsing. No directory, no behavior change: this stays process-local.
  */
 export const DVF_PARSED_CACHE_TTL_MS = 24 * 60 * 60_000;
 export const DVF_PARSED_CACHE_MAX_ENTRIES = 64;
+/**
+ * Disk subfolder for parsed commune/year rows, versioned with the row shape:
+ * bumping the suffix is how a shape change orphans the old files instead of
+ * misreading them (missing JSON fields arrive as `undefined`, never `null`).
+ */
+const DVF_DISK_SUBDIR = "dvf-v1";
 
 interface ParsedEntry {
   at: number;
@@ -154,7 +163,16 @@ export function rowsFromCsv(text: string): DvfRow[] {
  */
 export async function fetchCommuneYear(inseeCode: string, year: number): Promise<DvfRow[]> {
   const key = `${inseeCode}:${year}`;
+  // Memory first, then disk, then the network — and anything that reaches the
+  // network writes back to disk, including the empty answer of a missing file,
+  // so a commune-year with no sales hydrates from disk on the next restart
+  // instead of 404ing again. The writes are deliberately fire-and-forget: the
+  // rows are already in hand below, and a slow or unwritable disk must never
+  // hold a tool response hostage.
   return parsedCommuneYearCache.getOrLoad(key, async () => {
+    const fromDisk = await readDiskCache<DvfRow[]>(DVF_DISK_SUBDIR, key, DVF_PARSED_CACHE_TTL_MS);
+    if (fromDisk !== null) return fromDisk;
+
     const dept = departementFromInsee(inseeCode);
     const url = `https://files.data.gouv.fr/geo-dvf/latest/csv/${year}/communes/${dept}/${inseeCode}.csv`;
     try {
@@ -162,9 +180,14 @@ export async function fetchCommuneYear(inseeCode: string, year: number): Promise
       // deduplication but deliberately avoids retaining a second copy of the
       // same multi-MB CSV string alongside the parsed rows.
       const text = await fetchText(url, 0);
-      return rowsFromCsv(text);
+      const rows = rowsFromCsv(text);
+      void writeDiskCache(DVF_DISK_SUBDIR, key, rows, DVF_PARSED_CACHE_TTL_MS);
+      return rows;
     } catch (e) {
-      if (e instanceof HttpError && (e.status === 404 || e.status === 403)) return [];
+      if (e instanceof HttpError && (e.status === 404 || e.status === 403)) {
+        void writeDiskCache(DVF_DISK_SUBDIR, key, [], DVF_PARSED_CACHE_TTL_MS);
+        return [];
+      }
       throw e;
     }
   });

@@ -159,6 +159,7 @@ Point un client MCP « remote » sur l'URL de l'endpoint :
 |---|---|---|
 | `IMMO_HTTP_PORT` | *(absente = stdio)* | Port d'écoute ; sa présence bascule le serveur en mode HTTP |
 | `IMMO_HTTP_HOST` | `127.0.0.1` | Adresse de liaison |
+| `IMMO_CACHE_DIR` | *(absente = mémoire seule)* | Dossier de cache disque persistant pour les DVF : accélère le cold start d'un ordre de grandeur |
 
 À savoir avant d'exposer le serveur :
 
@@ -340,8 +341,10 @@ Licences : Licence Ouverte / Open Licence (Etalab) pour les jeux de l'État cit�
 ici, ODbL pour OpenStreetMap ; certains jeux de collectivités ont leur propre
 licence, à vérifier sur la fiche du jeu avant réutilisation. La source doit être
 citée dès qu'une réponse est reprise. Les jeux publics sont interrogés en direct,
-sans clé API. Le cache mémoire DVF réduit la latence et les appels répétés, mais
-est vidé au redémarrage.
+sans clé API. Le cache mémoire réduit la latence et les appels répétés, mais
+est vidé au redémarrage ; définir `IMMO_CACHE_DIR` (un dossier inscriptible)
+persiste les lignes DVF lues sur disque — un redémarrage réhydrate depuis le
+fichier au lieu de tout re-télécharger, sans changer les données servies.
 
 ## Développement
 
