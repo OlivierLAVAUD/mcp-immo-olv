@@ -4,6 +4,20 @@ const USER_AGENT = `mcp-immo-olv/${VERSION} (French open-data MCP; local project
 const TIMEOUT_MS = 25_000;
 const MAX_ATTEMPTS = 3;
 
+/**
+ * Per-source overrides for the two knobs above. The defaults (25 s, 3 attempts)
+ * suit sources that legitimately take long — a DVF commune CSV is multi-MB —
+ * but they are the wrong shape for a geocoder that answers in under a second
+ * when healthy, or for a mirror already given a second chance by its pair:
+ * there, failing fast beats waiting a quarter of a minute to fail.
+ */
+export interface FetchOptions {
+  /** Per-attempt socket timeout; defaults to 25 s. */
+  timeoutMs?: number;
+  /** Total attempts including the first; defaults to 3. */
+  attempts?: number;
+}
+
 interface CacheEntry {
   at: number;
   value: unknown;
@@ -69,20 +83,22 @@ export function isRetryable(e: unknown): boolean {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function request(url: string): Promise<Response> {
+async function request(url: string, options: FetchOptions = {}): Promise<Response> {
+  const timeoutMs = options.timeoutMs ?? TIMEOUT_MS;
+  const maxAttempts = options.attempts ?? MAX_ATTEMPTS;
   let lastError: unknown;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const res = await fetch(url, {
         headers: { "User-Agent": USER_AGENT },
         redirect: "follow",
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!res.ok) throw new HttpError(res.status, url);
       return res;
     } catch (e) {
       lastError = e;
-      if (attempt === MAX_ATTEMPTS || !isRetryable(e)) throw e;
+      if (attempt === maxAttempts || !isRetryable(e)) throw e;
       // Exponential backoff with jitter: 400ms, 800ms (+ up to 250ms).
       await sleep(400 * 2 ** (attempt - 1) + Math.random() * 250);
     }
@@ -113,9 +129,13 @@ async function coalesce<T>(key: string, ttlMs: number, work: () => Promise<T>): 
   return promise;
 }
 
-export async function fetchJson<T>(url: string, ttlMs = 5 * 60_000): Promise<T> {
+export async function fetchJson<T>(
+  url: string,
+  ttlMs = 5 * 60_000,
+  options: FetchOptions = {},
+): Promise<T> {
   return coalesce(url, ttlMs, async () => {
-    const res = await request(url);
+    const res = await request(url, options);
     return (await res.json()) as T;
   });
 }

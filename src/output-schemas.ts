@@ -427,6 +427,17 @@ const nearbyPoi = obj({
   osm: z.string().describe('OSM object id such as "node/123456", to check the claim at the source'),
 });
 
+const amenityMode = obj({
+  key: z.enum(["train", "metro", "tram", "bus"]),
+  label: z.string(),
+  count: z
+    .number()
+    .nullable()
+    .describe("Objects of this mode within the radius; null = source unreachable, which is NOT zero"),
+  nearest_distance_m: z.number().nullable(),
+  nearest: z.array(nearbyPoi),
+});
+
 const amenityCategory = obj({
   key: z.string(),
   label: z.string(),
@@ -436,6 +447,10 @@ const amenityCategory = obj({
     .describe("Matching objects found within the radius; null = source unreachable, which is NOT zero"),
   nearest_distance_m: z.number().nullable(),
   nearest: z.array(nearbyPoi),
+  modes: z
+    .array(amenityMode)
+    .optional()
+    .describe("Per-mode breakdown (train, métro, tram, bus), published on the `transports` category only"),
 });
 
 const nearbyAmenitiesOutput = obj({

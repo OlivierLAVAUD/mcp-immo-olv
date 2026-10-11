@@ -152,6 +152,7 @@ Installés en plugin Claude Code, trois raccourcis pré-câblent les appels :
 
 - « Qu'est-ce qu'il y a autour du 12 rue de la République à Lyon à moins de 800 m ? »
 - « Quelle est la gare ou l'arrêt de métro le plus proche du 10 rue de Rivoli à Paris ? »
+- « Y a-t-il un arrêt de tramway à moins de 500 m, et à quelle distance ? » (le détail par mode répond même quand le tram est plus loin que les arrêts de bus)
 - « Une école, une pharmacie et un supermarché dans les 500 m autour de cette adresse ? »
 - « Ce quartier est-il pratique sans voiture ? Donne les distances à vol d'oiseau en précisant que ce n'est pas un temps de marche. »
 - « Élargis le rayon à 2 km et dis-moi ce qui apparaît : hôpital, université, parc. »

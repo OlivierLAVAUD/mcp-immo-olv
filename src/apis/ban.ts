@@ -2,6 +2,14 @@ import { fetchJson } from "../http.js";
 
 const BASE = "https://api-adresse.data.gouv.fr";
 
+/**
+ * A geocoder answers in well under a second when healthy; when it stalls, every
+ * extra second is felt by the caller before a "not found" verdict. Two attempts
+ * on an 8 s leash keep a BAN hiccup from dominating a tool call — the default
+ * 25 s × 3 is shaped for multi-MB DVF files, not for this.
+ */
+const BAN_FETCH = { timeoutMs: 8_000, attempts: 2 } as const;
+
 export interface GeocodeResult {
   label: string;
   /** BAN interoperability id, e.g. "75102_6998_00010" (citycode_streetcode_number). */
@@ -54,13 +62,13 @@ function toResult(f: BanFeature): GeocodeResult {
 
 export async function geocode(query: string, limit = 5): Promise<GeocodeResult[]> {
   const url = `${BASE}/search/?q=${encodeURIComponent(query)}&limit=${limit}`;
-  const data = await fetchJson<{ features: BanFeature[] }>(url);
+  const data = await fetchJson<{ features: BanFeature[] }>(url, 5 * 60_000, BAN_FETCH);
   return data.features.map(toResult);
 }
 
 export async function reverseGeocode(lat: number, lon: number): Promise<GeocodeResult[]> {
   const url = `${BASE}/reverse/?lat=${lat}&lon=${lon}`;
-  const data = await fetchJson<{ features: BanFeature[] }>(url);
+  const data = await fetchJson<{ features: BanFeature[] }>(url, 5 * 60_000, BAN_FETCH);
   return data.features.map(toResult);
 }
 

@@ -41,11 +41,58 @@ export const OVERPASS_ENDPOINTS = [
 /** How long an Overpass answer stays valid: POIs move slowly. */
 const TTL_MS = 6 * 60 * 60_000;
 
+/**
+ * How close a tram platform has to stand to an already-counted stop of the same
+ * mode to be that same stop (measured between their OSM centres). Platform
+ * halves of one stop measured at 2 m and 8 m in the field, while distinct tram
+ * stops are hundreds of metres apart, so the margin is wide either way.
+ */
+const SAME_STOP_M = 60;
+
 export type AmenityCategoryKey = "transports" | "education" | "commerces" | "sante" | "loisirs";
+
+/**
+ * The transport modes counted separately inside the `transports` category.
+ *
+ * A single number cannot answer "is there a tram nearby?": a bus stop 30 m away
+ * and a tram stop 400 m away both end up in one `count`, and the closest-`limit`
+ * list is sorted by distance, so the tram can be pushed out of it. Every mode is
+ * therefore answered, with its own count and its own closest POIs.
+ */
+export type AmenityMode = "train" | "metro" | "tram" | "bus";
+
+interface ModeSpec {
+  key: AmenityMode;
+  label: string;
+}
+
+const MODES: ModeSpec[] = [
+  { key: "train", label: "Train / RER / gare" },
+  { key: "metro", label: "Métro" },
+  { key: "tram", label: "Tramway" },
+  { key: "bus", label: "Bus" },
+];
+
+/** Transport modes and labels, in the order they are always answered. */
+export const AMENITY_MODES = MODES.map(({ key, label }) => ({ key, label }));
 
 interface Selector {
   tag: string;
   values: string[];
+  /** Extra exact filters ANDed onto the clause, e.g. a platform that is a tram one. */
+  filters?: Array<[string, string]>;
+  /**
+   * The OSM type reported for a match, when the matched tag value is not the
+   * useful one: a `public_transport=platform` match is reported as `tram_stop`,
+   * which is what the object actually is to someone reading the answer.
+   */
+  type?: string;
+  /**
+   * A platform is a second mapping of a stop that may already be counted, so it
+   * is held back and kept only when it adds a stop of its own — see
+   * nearestByCategory for the two rules that decide that.
+   */
+  platform?: boolean;
 }
 
 interface CategorySpec {
@@ -62,6 +109,12 @@ const CATEGORIES: CategorySpec[] = [
       { tag: "railway", values: ["station", "halt", "tram_stop"] },
       { tag: "station", values: ["subway"] },
       { tag: "highway", values: ["bus_stop"] },
+      // A tram stop is usually mapped as a `railway=tram_stop` node *and* as
+      // one platform per direction; some stops exist as the platform alone.
+      // Those two selectors catch the latter, and the deduplication below keeps
+      // them from double-counting the stops the node already answered.
+      { tag: "public_transport", values: ["platform"], filters: [["tram", "yes"]], type: "tram_stop", platform: true },
+      { tag: "railway", values: ["platform"], filters: [["tram", "yes"]], type: "tram_stop", platform: true },
     ],
   },
   {
@@ -120,6 +173,15 @@ export interface NearbyPoi {
   osm: string;
 }
 
+/** One transport mode inside the `transports` category, shaped like its parent. */
+export interface AmenityModeResult {
+  key: AmenityMode;
+  label: string;
+  count: number | null;
+  nearest_distance_m: number | null;
+  nearest: NearbyPoi[];
+}
+
 export interface AmenityCategoryResult {
   key: AmenityCategoryKey;
   label: string;
@@ -129,6 +191,8 @@ export interface AmenityCategoryResult {
   nearest_distance_m: number | null;
   /** Up to `limit` closest POIs; empty when the source is unreachable. */
   nearest: NearbyPoi[];
+  /** The per-mode breakdown; only the `transports` category has one. */
+  modes?: AmenityModeResult[];
 }
 
 export interface NearbyAmenities {
@@ -144,15 +208,41 @@ function clause(selector: Selector, lat: number, lon: number, radiusM: number): 
     selector.values.length === 1
       ? `["${selector.tag}"="${selector.values[0]}"]`
       : `["${selector.tag}"~"^(${selector.values.join("|")})$"]`;
-  return `nwr${filter}(around:${radiusM},${lat},${lon});`;
+  const extra = (selector.filters ?? []).map(([tag, value]) => `["${tag}"="${value}"]`).join("");
+  return `nwr${filter}${extra}(around:${radiusM},${lat},${lon});`;
 }
+
+/**
+ * The transport mode of a matched element, read from its tags: the tag says
+ * "station", never "train". `subway` is tested first because a metro station
+ * is also a station; a tram stop wins over the generic station/halt rule.
+ */
+export function modeOf(tags: Record<string, string>): AmenityMode | null {
+  if (tags.station === "subway") return "metro";
+  if (tags.railway === "tram_stop" || tags.railway === "light_rail") return "tram";
+  if (tags.station === "tram" || tags.tram === "yes") return "tram";
+  if (tags.railway === "station" || tags.railway === "halt") return "train";
+  if (tags.highway === "bus_stop" || tags.bus === "yes") return "bus";
+  return null;
+}
+
+/**
+ * One Overpass attempt per mirror, on a short leash. The mirror pair is
+ * already the retry: a second mirror exists precisely because the first can
+ * struggle, so re-asking a failing mirror three times only delays the failover
+ * — and delays the final "unknown" answer when both are down. 12 s sits just
+ * above the query's own 10 s budget (`buildAmenityQuery`), enough for Overpass
+ * to report its own timeout as a 4xx before the socket is cut. Worst case for
+ * the whole tool: 2 mirrors × 12 s ≈ 25 s, against ~150 s before.
+ */
+const OVERPASS_TIMEOUT_MS = 12_000;
 
 /** The Overpass QL query for a radius around a point. Pure, so it is testable. */
 export function buildAmenityQuery(lat: number, lon: number, radiusM: number): string {
   const clauses = CATEGORIES.flatMap((category) =>
     category.selectors.map((selector) => clause(selector, lat, lon, radiusM)),
   );
-  return `[out:json][timeout:25];(\n  ${clauses.join("\n  ")}\n);\nout center;`;
+  return `[out:json][timeout:10];(\n  ${clauses.join("\n  ")}\n);\nout center;`;
 }
 
 /**
@@ -162,14 +252,19 @@ export function buildAmenityQuery(lat: number, lon: number, radiusM: number): st
  */
 export function classifyElement(
   tags: Record<string, string> | undefined,
-): { key: AmenityCategoryKey; type: string } | null {
+): { key: AmenityCategoryKey; type: string; mode: AmenityMode | null; platform: boolean } | null {
   if (!tags) return null;
   for (const category of CATEGORIES) {
     for (const selector of category.selectors) {
       const value = tags[selector.tag];
-      if (value !== undefined && selector.values.includes(value)) {
-        return { key: category.key, type: value };
-      }
+      if (value === undefined || !selector.values.includes(value)) continue;
+      if ((selector.filters ?? []).some(([tag, wanted]) => tags[tag] !== wanted)) continue;
+      return {
+        key: category.key,
+        type: selector.type ?? value,
+        mode: category.key === "transports" ? modeOf(tags) : null,
+        platform: selector.platform === true,
+      };
     }
   }
   return null;
@@ -184,6 +279,14 @@ export function elementPoint(element: OverpassElement): { lat: number; lon: numb
   return null;
 }
 
+/** A hit plus the two fields used to fold it, stripped before it is returned. */
+interface RawHit extends NearbyPoi {
+  mode: AmenityMode | null;
+  platform: boolean;
+}
+
+const toPoi = ({ mode: _mode, platform: _platform, ...poi }: RawHit): NearbyPoi => poi;
+
 /**
  * Fold raw elements into one entry per category: the total count inside the
  * radius, and the closest `limit` POIs. Categories with nothing around still
@@ -197,7 +300,7 @@ export function nearestByCategory(
   limit: number,
 ): AmenityCategoryResult[] {
   return CATEGORIES.map((category) => {
-    const hits: NearbyPoi[] = [];
+    const hits: RawHit[] = [];
     for (const element of elements) {
       const classified = classifyElement(element.tags);
       if (!classified || classified.key !== category.key) continue;
@@ -212,22 +315,87 @@ export function nearestByCategory(
         lat: point.lat,
         lon: point.lon,
         osm: `${element.type}/${element.id}`,
+        mode: classified.mode,
+        platform: classified.platform,
       });
     }
-    hits.sort((a, b) => a.distance_m - b.distance_m);
+
+    // Tram platforms are kept only when they add a stop nothing else answered:
+    // at one stop there is typically a `tram_stop` node *and* one platform per
+    // direction, so counting them all would multiply the same stop by three.
+    //
+    // Two rules, because neither alone suffices. A platform is dropped when a
+    // stop *of its own mode* repeats its name — of its own mode, because a bus
+    // stop named "Avenue de la Gare" 400 m away says nothing about a tram
+    // platform of the same name, and silencing that platform would delete a
+    // real tram stop from the answer. The name alone still misses the platform
+    // named after the street it stands on rather than the stop (Montpellier's
+    // "Avenue Henri Frenay" is the `Du Guesclin` stop), so a platform standing
+    // within SAME_STOP_M of a stop of its own mode is dropped too. And an
+    // unnamed platform is left out for the reason an element with no point is:
+    // it cannot be attributed to any stop.
+    //
+    // The primary mapping is folded first, in distance order, so the rule never
+    // depends on which of a stop's objects Overpass happened to return first.
+    const byDistance = (a: RawHit, b: RawHit) => a.distance_m - b.distance_m;
+    const kept: RawHit[] = [];
+    const keptNames: Partial<Record<AmenityMode, Set<string>>> = {};
+    const keptPoints: Partial<Record<AmenityMode, Array<{ lat: number; lon: number }>>> = {};
+
+    const keep = (hit: RawHit): void => {
+      kept.push(hit);
+      if (hit.name && hit.mode) (keptNames[hit.mode] ??= new Set()).add(hit.name.toLowerCase());
+      if (hit.mode) (keptPoints[hit.mode] ??= []).push({ lat: hit.lat, lon: hit.lon });
+    };
+
+    for (const hit of hits.filter((h) => !h.platform).sort(byDistance)) keep(hit);
+
+    for (const hit of hits.filter((h) => h.platform).sort(byDistance)) {
+      if (!hit.name) continue;
+      if (hit.mode && keptNames[hit.mode]?.has(hit.name.toLowerCase())) continue;
+      const sameStop = hit.mode
+        ? (keptPoints[hit.mode] ?? []).some(
+            (p) => haversineMeters(hit.lat, hit.lon, p.lat, p.lon) <= SAME_STOP_M,
+          )
+        : false;
+      if (sameStop) continue;
+      keep(hit);
+    }
+
+    // Keeping the primary stops first was a fold order, not an answer order:
+    // the payload stays sorted by distance, so `nearest_distance_m` and the
+    // per-mode closest lists keep meaning what they say.
+    kept.sort(byDistance);
+
+    const modes =
+      category.key === "transports"
+        ? MODES.map((mode) => {
+            const found = kept.filter((h) => h.mode === mode.key);
+            return {
+              key: mode.key,
+              label: mode.label,
+              count: found.length,
+              nearest_distance_m: found[0]?.distance_m ?? null,
+              nearest: found.slice(0, limit).map(toPoi),
+            };
+          })
+        : undefined;
+
     return {
       key: category.key,
       label: category.label,
-      count: hits.length,
-      nearest_distance_m: hits[0]?.distance_m ?? null,
-      nearest: hits.slice(0, limit),
+      count: kept.length,
+      nearest_distance_m: kept[0]?.distance_m ?? null,
+      nearest: kept.slice(0, limit).map(toPoi),
+      modes,
     };
   });
 }
 
 /**
  * Every category, unanswered: what a source outage has to look like. `count`
- * stays null — an empty list here would claim the neighbourhood is empty.
+ * stays null — an empty list here would claim the neighbourhood is empty. The
+ * mode breakdown follows the same rule, so a tram count is never 0 on an outage.
  */
 export function unavailableAmenities(): AmenityCategoryResult[] {
   return CATEGORIES.map((category) => ({
@@ -236,6 +404,16 @@ export function unavailableAmenities(): AmenityCategoryResult[] {
     count: null,
     nearest_distance_m: null,
     nearest: [],
+    modes:
+      category.key === "transports"
+        ? MODES.map((mode) => ({
+            key: mode.key,
+            label: mode.label,
+            count: null,
+            nearest_distance_m: null,
+            nearest: [],
+          }))
+        : undefined,
   }));
 }
 
@@ -260,7 +438,10 @@ export async function fetchNearby(
   for (const endpoint of OVERPASS_ENDPOINTS) {
     const url = `${endpoint}?data=${encodeURIComponent(query)}`;
     try {
-      const data = await fetchJson<OverpassResponse>(url, TTL_MS);
+      const data = await fetchJson<OverpassResponse>(url, TTL_MS, {
+        timeoutMs: OVERPASS_TIMEOUT_MS,
+        attempts: 1,
+      });
       return { available: true, elements: data.elements ?? [] };
     } catch (e) {
       if (!isRetryable(e)) throw e;

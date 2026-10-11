@@ -358,7 +358,7 @@ export function createServer(): McpServer {
     {
       title: "What is around an address (POIs)",
       description:
-        "Nearby points of interest around a French address or point, from OpenStreetMap: public transport (train, metro, tram, bus stop), schools and higher education, everyday shops, health (pharmacy, doctor, hospital) and green/sport space — each with how many are within the radius and the closest ones, in metres as the crow flies. Answers the neighbourhood question no official French dataset covers directly. When Overpass is unreachable, every count is UNKNOWN (null) rather than zero. Source: OpenStreetMap contributors (ODbL), via the Overpass API.",
+        "Nearby points of interest around a French address or point, from OpenStreetMap: public transport (train, metro, tram, bus stop), schools and higher education, everyday shops, health (pharmacy, doctor, hospital) and green/sport space — each with how many are within the radius and the closest ones, in metres as the crow flies. The transports category also breaks its count down by mode (train, metro, tram, bus), so a tram stop is answered in its own right rather than drowned in a single transport figure. Answers the neighbourhood question no official French dataset covers directly. When Overpass is unreachable, every count is UNKNOWN (null) rather than zero. Source: OpenStreetMap contributors (ODbL), via the Overpass API.",
       inputSchema: {
         ...pointInputSchema(),
         radius_m: z

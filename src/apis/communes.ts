@@ -3,6 +3,8 @@ import { parentCommuneCode } from "../util/geo.js";
 
 const BASE = "https://geo.api.gouv.fr";
 const FIELDS = "nom,code,codesPostaux,codeDepartement,codeRegion,population,surface,centre,departement,region";
+/** Same short leash as BAN: this API answers light questions, fast. */
+const COMMUNES_FETCH = { timeoutMs: 8_000, attempts: 2 } as const;
 
 export interface CommuneInfo {
   nom: string;
@@ -20,7 +22,7 @@ export interface CommuneInfo {
 
 export async function communeByCode(inseeCode: string): Promise<CommuneInfo> {
   const code = parentCommuneCode(inseeCode);
-  return fetchJson<CommuneInfo>(`${BASE}/communes/${code}?fields=${FIELDS}`);
+  return fetchJson<CommuneInfo>(`${BASE}/communes/${code}?fields=${FIELDS}`, 5 * 60_000, COMMUNES_FETCH);
 }
 
 /**
@@ -31,13 +33,15 @@ export async function communeByCode(inseeCode: string): Promise<CommuneInfo> {
 export async function communesByDepartement(code: string): Promise<CommuneInfo[]> {
   const communes = await fetchJson<CommuneInfo[]>(
     `${BASE}/communes?codeDepartement=${code}&fields=${FIELDS}&limit=1000`,
+    5 * 60_000,
+    COMMUNES_FETCH,
   );
   return communes.sort((a, b) => (b.population ?? 0) - (a.population ?? 0));
 }
 
 export async function communesByName(name: string, limit = 5): Promise<CommuneInfo[]> {
   const url = `${BASE}/communes?nom=${encodeURIComponent(name)}&fields=${FIELDS}&limit=${limit}&boost=population`;
-  return fetchJson<CommuneInfo[]>(url);
+  return fetchJson<CommuneInfo[]>(url, 5 * 60_000, COMMUNES_FETCH);
 }
 
 /**
@@ -49,12 +53,16 @@ export async function communeCodeAtPoint(lat: number, lon: number): Promise<stri
   try {
     const communes = await fetchJson<{ code: string }[]>(
       `${BASE}/communes?lat=${lat}&lon=${lon}&fields=code`,
+      5 * 60_000,
+      COMMUNES_FETCH,
     );
     const code = communes[0]?.code;
     if (!code) return null;
     if (code === "75056" || code === "69123" || code === "13055") {
       const arr = await fetchJson<{ code: string }[]>(
         `${BASE}/communes?lat=${lat}&lon=${lon}&type=arrondissement-municipal&fields=code`,
+        5 * 60_000,
+        COMMUNES_FETCH,
       );
       return arr[0]?.code ?? code;
     }

@@ -1,5 +1,48 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **A tram platform is no longer silenced by an unrelated stop of another mode
+  that shares its name.** The name rule of the platform deduplication compared
+  against every kept stop in the category: a bus stop named "Avenue de la Gare"
+  400 m away made a tram platform of the same name — the only mapping of that
+  tram stop — count for nothing. Names are now kept per mode, matching what the
+  proximity rule already did: a platform is held back only when a stop *of its
+  own mode* repeats its name or stands within 60 m of it. The distance rule and
+  the unnamed-platform rule are unchanged.
+
+### Changed
+
+- **`nearby_amenities` fails fast instead of failing late.** The Overpass query
+  carries `[timeout:10]` and each mirror gets a single 12 s attempt: the second
+  mirror is already the retry, so a struggling mirror no longer burns 3 × 25 s
+  before failover. Worst case for the tool drops from ~150 s (2 mirrors × 3
+  attempts × 25 s + backoff) to ~25 s, and both mirrors down still answers
+  `available: false` with every count `null` — never an empty neighbourhood.
+- **BAN and geo.api.gouv.fr get an 8 s, 2-attempt leash.** A geocoder answers in
+  under a second when healthy; the 25 s × 3 retry policy stays where it belongs
+  — multi-MB DVF commune CSVs — and no longer sets the floor on a geocoding
+  outage. `fetchJson` takes optional per-source `timeoutMs` / `attempts`;
+  defaults are unchanged.
+- **`nearby_amenities` now answers public transport per mode.** The `transports`
+  category carries a `modes` breakdown (train, métro, tram, bus), each with its
+  own count and its closest objects. A single total mixed a bus stop 30 m away
+  with a tram stop 400 m away, and the closest list — sorted by distance — could
+  push the tram out of it. Both cache-hit and outage paths keep the same shape:
+  on an Overpass outage every mode count is `null`, never 0, or the answer would
+  claim "no tram here".
+- **Tram stops mapped as a platform alone are now counted.** `public_transport`
+  / `railway` platforms tagged `tram=yes` are queried too, so a stop OSM has not
+  given a `railway=tram_stop` node is still answered (Bordeaux's Hôtel de Ville,
+  served by lines A, B and F, was missing). A platform is held back when it only
+  repeats a stop already counted — same name, or standing within 60 m of a stop
+  of its own mode, which catches the platform named after its street rather than
+  the stop (Montpellier's "Avenue Henri Frenay" is the Du Guesclin stop).
+  Unnamed platforms are left out: they cannot be attributed to any stop. Across
+  six tram cities this adds exactly one stop to the count, and no duplicate.
+
 ## 1.8.1 — 2026-10-10
 
 ### Changed

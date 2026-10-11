@@ -195,7 +195,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `cadastral_parcel` | Parcelle cadastrale : identifiant `idu`, section, numéro, contenance officielle | PCI, IGN / DGFiP (API Carto) |
 | `urbanism_zoning` | Zone PLU (U / AU / A / N), règlement et prescriptions d'urbanisme | Géoportail de l'urbanisme (DGALN / IGN) |
 | `iris_lookup` | IRIS INSEE d'une adresse : code, nom, type, commune | CONTOURS-IRIS / ADMINEXPRESS, IGN |
-| `nearby_amenities` | Ce qu'il y a autour d'une adresse : transports, écoles, commerces, santé, espaces verts — nombre dans le rayon et distance à vol d'oiseau des plus proches | OpenStreetMap (ODbL), API Overpass |
+| `nearby_amenities` | Ce qu'il y a autour d'une adresse : transports, écoles, commerces, santé, espaces verts — nombre dans le rayon et distance à vol d'oiseau des plus proches, avec un détail train / métro / tram / bus pour les transports | OpenStreetMap (ODbL), API Overpass |
 | `natural_risks` | Risques naturels et technologiques officiels | Géorisques |
 | `risk_summary` | Digest des risques : une phrase par risque (inondation, argile, radon, ICPE, DPE), explicite sur les inconnus | Géorisques + ADEME |
 | `commune_info` | Population, code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |

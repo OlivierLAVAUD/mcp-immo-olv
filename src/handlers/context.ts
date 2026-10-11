@@ -269,8 +269,8 @@ export async function nearbyAmenities(args: {
       : unavailableAmenities(),
     unavailable: nearby.unavailable,
     note: nearby.available
-      ? "Distances are straight-line (as the crow flies) from the point, in meters, measured to the OSM centre of each object. `count` is how many matching objects the radius query returned — an area such as a park or a station building is one object, placed at its centre — and `nearest` lists the closest. OSM is contributed data, so a missing POI is not proof it does not exist."
-      : "Overpass could not be reached, so the surroundings are UNKNOWN — not empty. A null `count` here does not mean nothing is nearby.",
+      ? "Distances are straight-line (as the crow flies) from the point, in meters, measured to the OSM centre of each object. `count` is how many matching objects the radius query returned — an area such as a park or a station building is one object, placed at its centre — and `nearest` lists the closest. The `transports` category also carries a `modes` breakdown (train, métro, tram, bus), each with its own count and closest objects, because a single count mixes a bus stop 30 m away with a tram stop 400 m away. Tram stops come from `railway=tram_stop` and, when a stop is mapped as a platform only, from its named tram platform — held back when it merely repeats a stop of its own mode (same name, or standing on the same stop), so a stop is never counted twice."
+      : "Overpass could not be reached, so the surroundings are UNKNOWN — not empty. A null `count` here does not mean nothing is nearby, and neither does a null mode count.",
     caveats: [
       "OpenStreetMap is community data (ODbL): coverage is uneven, and a sparse category can reflect missing tags rather than a real absence.",
       "Straight-line distance flatters a walk: rivers, railways and one-way streets add to the real itinerary — check the route before concluding.",

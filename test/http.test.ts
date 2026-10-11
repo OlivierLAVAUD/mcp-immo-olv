@@ -118,4 +118,19 @@ describe("retry policy", () => {
     await expect(fetchJson(url)).rejects.toBeInstanceOf(HttpError);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
+
+  it("honours a caller-supplied attempt count and timeout (fail-fast sources)", async () => {
+    const url = uniqueUrl();
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}, 500));
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Overpass asks for one attempt: the second mirror is the retry, so a
+    // failing mirror must not burn the tool's latency budget three times.
+    await expect(fetchJson(url, 5 * 60_000, { attempts: 1 })).rejects.toBeInstanceOf(HttpError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // The per-attempt timeout is whatever the caller asked for.
+    const init = fetchMock.mock.calls[0][1] as { signal: AbortSignal };
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
 });

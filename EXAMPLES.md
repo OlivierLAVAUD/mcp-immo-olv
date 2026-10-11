@@ -47,15 +47,26 @@ catégories, dont la liste complète des risques hors catégories.
 
 ```text
 transports count=  67  plus proche= 116 m  → Saint-Nizier [bus_stop] 116 m | Cordeliers [bus_stop] 179 m | Cordeliers [station] 191 m
+   · Train / RER / gare   count=   1  plus proche= 715 m  → Lyon-Saint-Paul 715 m
+   · Métro                count=   4  plus proche= 191 m  → Cordeliers 191 m | Hôtel de Ville - Louis Pradel 306 m | Croix-Paquet 658 m
+   · Tramway              count=   0  plus proche=   — m  → —
+   · Bus                  count=  62  plus proche= 116 m  → Saint-Nizier 116 m | Cordeliers 179 m | Cordeliers 206 m
 education  count=  42  plus proche= 116 m  → Babilou L'Envol [kindergarten] 116 m | Collège Ampère [school] 135 m | Lycée Ampère [school] 150 m
 commerces  count= 109  plus proche=  25 m  → Carrefour City [convenience] 25 m | Auchan [supermarket] 59 m | La Vie Claire [convenience] 61 m
 sante      count=  38  plus proche= 173 m  → Grande Pharmacie Lyonnaise [pharmacy] 173 m | Pharmacie de l'Opéra [pharmacy] 207 m | Lafayette Florit [pharmacy] 239 m
 loisirs    count=  69  plus proche= 228 m  → (sans nom) [garden] 228 m | (sans nom) [garden] 232 m | (sans nom) [garden] 235 m
 ```
 
+La catégorie `transports` porte en plus un sous-comptage par mode (train, métro,
+tram, bus) : un seul total mélangeait un arrêt de bus à 30 m et un arrêt de
+tramway à 400 m, et la liste des plus proches — triée par distance — pouvait
+écarter le tram. Ici, 67 objets de transport se lisent comme 1 gare, 4 métros,
+0 tram et 62 arrêts de bus.
+
 Les distances sont **à vol d'oiseau**, mesurées au centre de chaque objet OSM, et
 chaque POI porte son identifiant OSM (`node/…`) pour vérification. Si aucun miroir
-Overpass ne répond, tous les `count` sont `null` : **inconnu, jamais 0**.
+Overpass ne répond, tous les `count` sont `null` : **inconnu, jamais 0** — y compris
+les comptes par mode, sans quoi une panne se lirait « pas de tram ici ».
 
 ## 3. `compare_properties` — deux adresses côte à côte
 

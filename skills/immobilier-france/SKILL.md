@@ -27,6 +27,7 @@ jamais inventer un chiffre, et de publier les limites que la réponse expose.
 | « Quelle est cette parcelle ? » | `cadastral_parcel` |
 | « Quel quartier INSEE ? » | `iris_lookup` |
 | « Qu'est-ce qu'il y a autour : gare, école, commerces, hôpital ? » | `nearby_amenities` (distances à vol d'oiseau, à confirmer par un itinéraire) |
+| « Est-ce desservi par le tram / le métro ? » | `nearby_amenities`, mode `tram` ou `metro` de la catégorie `transports` |
 | « Combien d'habitants, quel département ? » | `commune_info` |
 | « Quelle adresse pour ce GPS ? » / adresse ambiguë | `geocode_address`, `reverse_geocode` |
 
@@ -56,8 +57,10 @@ Si l'adresse n'est pas parfaitement identifiée, résous-la d'abord avec
   habitable.
 - **OpenStreetMap = données contributives.** `nearby_amenities` reflète ce que la
   communauté a renseigné : une catégorie vide n'est pas une preuve d'absence (des
-  tags manquent). Et si Overpass ne répond pas, chaque `count` vaut `null` :
-  c'est **inconnu**, jamais « rien autour ». Les distances sont à vol d'oiseau.
+  tags manquent), et un mode de transport à `count: 0` ne prouve pas qu'aucun
+  arrêt n'existe — seulement qu'aucun n'est cartographié dans le rayon. Et si
+  Overpass ne répond pas, chaque `count` vaut `null`, modes compris : c'est
+  **inconnu**, jamais « rien autour ». Les distances sont à vol d'oiseau.
 
 ## Sensibilité des sources
 

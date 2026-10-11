@@ -3,10 +3,12 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import {
   AMENITY_CATEGORIES,
+  AMENITY_MODES,
   buildAmenityQuery,
   classifyElement,
   elementPoint,
   fetchNearby,
+  modeOf,
   nearestByCategory,
   unavailableAmenities,
   type OverpassElement,
@@ -35,14 +37,14 @@ describe("Overpass query", () => {
   it("asks one clause per selector, exact matches where a single value suffices", () => {
     const query = buildAmenityQuery(45.764, 4.8357, 800);
 
-    expect(query.startsWith("[out:json][timeout:25];")).toBe(true);
+    expect(query.startsWith("[out:json][timeout:10];")).toBe(true);
     expect(query.trimEnd().endsWith("out center;")).toBe(true);
 
-    // One clause per selector in the category table (3 transports + 1 education
+    // One clause per selector in the category table (5 transports + 1 education
     // + 2 commerces + 1 santé + 1 loisirs), so a category cannot be declared in
     // the table and silently left out of the query. Adding a category is meant
     // to force this number, and the assertions below, to be updated.
-    expect(query.match(/nwr\[/g)).toHaveLength(8);
+    expect(query.match(/nwr\[/g)).toHaveLength(10);
     expect(AMENITY_CATEGORIES.map((c) => c.key)).toEqual([
       "transports",
       "education",
@@ -55,6 +57,10 @@ describe("Overpass query", () => {
     expect(query).toContain('["railway"~"^(station|halt|tram_stop)$"](around:800,45.764,4.8357)');
     expect(query).toContain('["station"="subway"](around:800,45.764,4.8357)');
     expect(query).toContain('["highway"="bus_stop"](around:800,45.764,4.8357)');
+    // Tram stops mapped as a platform alone are queried too, restricted to the
+    // platforms tagged as tram ones so a bus platform is never swept in.
+    expect(query).toContain('["public_transport"="platform"]["tram"="yes"](around:800,45.764,4.8357)');
+    expect(query).toContain('["railway"="platform"]["tram"="yes"](around:800,45.764,4.8357)');
     expect(query).toContain('["amenity"~"^(school|kindergarten|college|university)$"](around:800,45.764,4.8357)');
     expect(query).toContain('["shop"~"^(supermarket|convenience|bakery|butcher|greengrocer)$"](around:800,45.764,4.8357)');
     expect(query).toContain('["amenity"="marketplace"](around:800,45.764,4.8357)');
@@ -67,14 +73,40 @@ describe("Overpass query", () => {
 
 describe("classifyElement", () => {
   it("maps OSM tags onto the five answered categories", () => {
-    expect(classifyElement({ railway: "tram_stop" })).toEqual({ key: "transports", type: "tram_stop" });
-    expect(classifyElement({ station: "subway" })).toEqual({ key: "transports", type: "subway" });
-    expect(classifyElement({ highway: "bus_stop" })).toEqual({ key: "transports", type: "bus_stop" });
-    expect(classifyElement({ amenity: "university" })).toEqual({ key: "education", type: "university" });
-    expect(classifyElement({ shop: "bakery" })).toEqual({ key: "commerces", type: "bakery" });
-    expect(classifyElement({ amenity: "marketplace" })).toEqual({ key: "commerces", type: "marketplace" });
-    expect(classifyElement({ amenity: "pharmacy" })).toEqual({ key: "sante", type: "pharmacy" });
-    expect(classifyElement({ leisure: "park" })).toEqual({ key: "loisirs", type: "park" });
+    expect(classifyElement({ railway: "tram_stop" })).toEqual({ key: "transports", type: "tram_stop", mode: "tram", platform: false });
+    expect(classifyElement({ station: "subway" })).toEqual({ key: "transports", type: "subway", mode: "metro", platform: false });
+    expect(classifyElement({ highway: "bus_stop" })).toEqual({ key: "transports", type: "bus_stop", mode: "bus", platform: false });
+    expect(classifyElement({ amenity: "university" })).toEqual({ key: "education", type: "university", mode: null, platform: false });
+    expect(classifyElement({ shop: "bakery" })).toEqual({ key: "commerces", type: "bakery", mode: null, platform: false });
+    expect(classifyElement({ amenity: "marketplace" })).toEqual({ key: "commerces", type: "marketplace", mode: null, platform: false });
+    expect(classifyElement({ amenity: "pharmacy" })).toEqual({ key: "sante", type: "pharmacy", mode: null, platform: false });
+    expect(classifyElement({ leisure: "park" })).toEqual({ key: "loisirs", type: "park", mode: null, platform: false });
+  });
+
+  it("reads a tram stop mapped as a platform, but never a bus platform", () => {
+    // Reported as what it is to a reader — a tram stop — and flagged as a
+    // platform so the fold can hold it back if the stop is already counted.
+    expect(classifyElement({ public_transport: "platform", railway: "platform", tram: "yes" })).toEqual({
+      key: "transports",
+      type: "tram_stop",
+      mode: "tram",
+      platform: true,
+    });
+
+    expect(classifyElement({ public_transport: "platform" })).toBeNull();
+    expect(classifyElement({ public_transport: "platform", bus: "yes" })).toBeNull();
+    expect(classifyElement({ public_transport: "platform", tram: "no" })).toBeNull();
+  });
+
+  it("reads the transport mode off the tags, subway before station", () => {
+    expect(modeOf({ railway: "station" })).toBe("train");
+    expect(modeOf({ railway: "halt" })).toBe("train");
+    expect(modeOf({ railway: "station", station: "subway" })).toBe("metro");
+    expect(modeOf({ railway: "station", station: "tram" })).toBe("tram");
+    expect(modeOf({ railway: "light_rail" })).toBe("tram");
+    expect(modeOf({ public_transport: "platform", tram: "yes" })).toBe("tram");
+    expect(modeOf({ highway: "bus_stop" })).toBe("bus");
+    expect(modeOf({ shop: "bakery" })).toBeNull();
   });
 
   it("ignores anything outside the answered categories, so nothing is invented", () => {
@@ -89,6 +121,8 @@ describe("classifyElement", () => {
     expect(classifyElement({ railway: "station", shop: "supermarket" })).toEqual({
       key: "transports",
       type: "station",
+      mode: "train",
+      platform: false,
     });
   });
 
@@ -131,11 +165,115 @@ describe("nearestByCategory", () => {
     // Nothing around is a real answer: 0, not null.
     expect(transports).toMatchObject({ count: 0, nearest_distance_m: null, nearest: [] });
     expect(categories.find((c) => c.key === "loisirs")!.count).toBe(1);
+    // The mode breakdown answers too, and only transports has one.
+    expect(transports.modes!.map((m) => m.key)).toEqual(["train", "metro", "tram", "bus"]);
+    expect(transports.modes!.every((m) => m.count === 0 && m.nearest.length === 0)).toBe(true);
+    expect(AMENITY_MODES.map((m) => m.key)).toEqual(transports.modes!.map((m) => m.key));
+    expect(categories.find((c) => c.key === "loisirs")!.modes).toBeUndefined();
 
-    // What a source outage must look like instead: null, never 0.
+    // What a source outage must look like instead: null, never 0 — modes too,
+    // or an outage would read as "no tram here".
     const unknown = unavailableAmenities();
     expect(unknown.map((c) => c.key)).toEqual(categories.map((c) => c.key));
     expect(unknown.every((c) => c.count === null && c.nearest_distance_m === null && c.nearest.length === 0)).toBe(true);
+    const unknownTransports = unknown.find((c) => c.key === "transports")!;
+    expect(unknownTransports.modes!.every((m) => m.count === null && m.nearest_distance_m === null && m.nearest.length === 0)).toBe(true);
+  });
+
+  it("counts each transport mode separately, so a tram is not drowned by buses", () => {
+    const elements = [
+      poi({ lat: LAT, lon: LON, tags: { highway: "bus_stop", name: "Bus 1" } }),
+      poi({ lat: LAT + 0.0005, lon: LON, tags: { highway: "bus_stop", name: "Bus 2" } }),
+      poi({ lat: LAT + 0.001, lon: LON, tags: { station: "subway", name: "Métro" } }),
+      poi({ lat: LAT + 0.002, lon: LON, tags: { railway: "station", name: "Gare" } }),
+      poi({ lat: LAT + 0.004, lon: LON, tags: { railway: "tram_stop", name: "Tram" } }),
+    ];
+
+    const transports = nearestByCategory(elements, LAT, LON, 2).find((c) => c.key === "transports")!;
+    const modes = Object.fromEntries(transports.modes!.map((m) => [m.key, m]));
+
+    expect(transports.count).toBe(5);
+    expect(modes.bus.count).toBe(2);
+    expect(modes.metro.count).toBe(1);
+    expect(modes.train.count).toBe(1);
+    expect(modes.tram.count).toBe(1);
+    // The closest tram is listed even though the mixed list stops at `limit`.
+    expect(modes.tram.nearest[0]).toMatchObject({ name: "Tram", type: "tram_stop" });
+    expect(modes.tram.nearest_distance_m).toBe(modes.tram.nearest[0].distance_m);
+    expect(modes.bus.nearest.map((p) => p.name)).toEqual(["Bus 1", "Bus 2"]);
+    // The mode POIs carry no fold fields.
+    expect(Object.keys(modes.tram.nearest[0]).sort()).toEqual(["distance_m", "lat", "lon", "name", "osm", "type"]);
+  });
+
+  it("counts a tram platform only when it adds a stop nothing else answered", () => {
+    // ~5 m and ~22 m north of the point; degrees of latitude are ~111 km.
+    const nearby = (m: number) => LAT + m / 111_000;
+    const platform = (name: string | undefined, dLat = 0) =>
+      poi({
+        lat: nearby(dLat),
+        lon: LON,
+        tags: {
+          public_transport: "platform",
+          railway: "platform",
+          tram: "yes",
+          ...(name ? { name } : {}),
+        },
+      });
+    const elements: OverpassElement[] = [
+      poi({ lat: LAT, lon: LON, tags: { railway: "tram_stop", name: "Comédie" } }),
+      // The two platforms of the same stop: same name, so they must not multiply it.
+      platform("Comédie"),
+      platform("Comédie"),
+      // Named after the street it stands on, not the stop: Montpellier's "Avenue
+      // Henri Frenay" is the `Du Guesclin` stop, 7 m from its tram_stop nodes.
+      // Only proximity catches this one.
+      platform("Avenue Henri Frenay", 5),
+      // An unnamed platform cannot be attributed to any stop.
+      platform(undefined),
+      // A stop mapped as a named platform only, far from anything counted: the
+      // one to recover, with its two directions collapsed by name.
+      platform("Observatoire", 222),
+      platform("Observatoire", 223),
+      // A tram platform standing on a *bus* stop is its own stop, not a repeat.
+      platform("Tram Ici", 300),
+    ];
+    elements.push(poi({ lat: nearby(303), lon: LON, tags: { highway: "bus_stop", name: "Bus Là" } }));
+
+    const transports = nearestByCategory(elements, LAT, LON, 5).find((c) => c.key === "transports")!;
+
+    expect(transports.count).toBe(4);
+    expect(transports.nearest.map((p) => p.name)).toEqual([
+      "Comédie",
+      "Observatoire",
+      "Tram Ici",
+      "Bus Là",
+    ]);
+    expect(transports.nearest.every((p) => p.type === "tram_stop" || p.type === "bus_stop")).toBe(true);
+    expect(transports.modes!.find((m) => m.key === "tram")!.count).toBe(3);
+    expect(transports.modes!.find((m) => m.key === "bus")!.count).toBe(1);
+  });
+
+  it("keeps a platform that shares its name with a stop of another mode", () => {
+    // A bus stop and a tram platform both take their name from the street they
+    // stand on, 400 m apart. They are two different stops: the name rule must
+    // not silence the platform because a *bus* answers to the same name — that
+    // platform is the only mapping of its tram stop.
+    const elements: OverpassElement[] = [
+      poi({ lat: LAT, lon: LON, tags: { highway: "bus_stop", name: "Avenue de la Gare" } }),
+      poi({
+        lat: LAT + 0.0036,
+        lon: LON,
+        tags: { public_transport: "platform", railway: "platform", tram: "yes", name: "Avenue de la Gare" },
+      }),
+    ];
+
+    const transports = nearestByCategory(elements, LAT, LON, 5).find((c) => c.key === "transports")!;
+
+    expect(transports.count).toBe(2);
+    const modes = Object.fromEntries(transports.modes!.map((m) => [m.key, m]));
+    expect(modes.bus.count).toBe(1);
+    expect(modes.tram.count).toBe(1);
+    expect(modes.tram.nearest[0]).toMatchObject({ name: "Avenue de la Gare", type: "tram_stop" });
   });
 
   it("leaves out an element it cannot place, rather than counting it at 0 m", () => {
@@ -242,6 +380,9 @@ describe("nearby_amenities through the MCP server", () => {
     expect(transports.count).toBe(1);
     expect(transports.nearest[0].name).toBe("Saxe");
     expect(transports.nearest[0].distance_m).toBe(0);
+    // The tram stop is answered as a tram, in its own mode count.
+    expect(transports.modes.find((m: any) => m.key === "tram").count).toBe(1);
+    expect(transports.modes.reduce((n: number, m: any) => n + m.count, 0)).toBe(1);
     // The unmatched restaurant is not smuggled into any category.
     expect(structured.categories.reduce((n: number, c: any) => n + c.count, 0)).toBe(2);
     expect(structured.unavailable).toBeUndefined();
@@ -261,6 +402,9 @@ describe("nearby_amenities through the MCP server", () => {
     expect(structured.available).toBe(false);
     expect(structured.categories).toHaveLength(5);
     expect(structured.categories.every((c: any) => c.count === null && c.nearest.length === 0)).toBe(true);
+    // A tram count of 0 on an outage would claim "no tram here".
+    const transports = structured.categories.find((c: any) => c.key === "transports");
+    expect(transports.modes.every((m: any) => m.count === null && m.nearest.length === 0)).toBe(true);
     expect(structured.unavailable.reason).toMatch(/HTTP 503/);
     expect(structured.note).toContain("UNKNOWN");
 
