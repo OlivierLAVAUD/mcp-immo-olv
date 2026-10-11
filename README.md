@@ -17,7 +17,9 @@ financier**.
 ## Modalités de connexion
 
 Prérequis unique : **Node.js 18 ou plus récent**. Aucune clé API, aucun compte.
-Le serveur tourne en local, en `stdio` : rien n'est exposé sur le réseau.
+Par défaut le serveur tourne en local, en `stdio` : rien n'est exposé sur le
+réseau. Un mode `Streamable HTTP` optionnel (variable `IMMO_HTTP_PORT`) permet
+de l'héberger et de le partager — voir [§ 6](#6-hébergement--streamable-http).
 
 | Votre contexte | Connexion en une ligne |
 |---|---|
@@ -26,6 +28,7 @@ Le serveur tourne en local, en `stdio` : rien n'est exposé sur le réseau.
 | **Autre client MCP** | copier le bloc JSON ci-dessous dans `mcpServers` |
 | **Registre MCP officiel** | serveur `io.github.OlivierLAVAUD/mcp-immo` |
 | **Aucun client MCP** | console web locale : `npm run dev` → http://localhost:5173 |
+| **Hébergement / accès distant** | `IMMO_HTTP_PORT=8123 npx -y mcp-immo-olv@latest` → `http://127.0.0.1:8123/mcp` |
 
 ### 1. Claude Code
 
@@ -129,6 +132,51 @@ npm run dev          # console : http://localhost:5173
 Sans rien installer, un client compatible résout le serveur depuis le registre
 MCP officiel sous le nom `io.github.OlivierLAVAUD/mcp-immo` — voir
 [Installer depuis le registre MCP](#installer-depuis-le-registre-mcp).
+
+### 6. Hébergement / Streamable HTTP
+
+Par défaut le serveur est un processus `stdio` lancé par un client MCP. En
+définissant `IMMO_HTTP_PORT`, ce **même registre d'outils** bascule sur le
+transport MCP *Streamable HTTP*, pour l'héberger, le partager en équipe ou le
+joindre depuis un client qui ne sait pas lancer un sous-processus.
+
+```bash
+IMMO_HTTP_PORT=8123 npx -y mcp-immo-olv@latest
+# → mcp-immo-olv listening on Streamable HTTP: http://127.0.0.1:8123/mcp
+```
+
+Point un client MCP « remote » sur l'URL de l'endpoint :
+
+```json
+{
+  "mcpServers": {
+    "immo-olv": { "url": "http://127.0.0.1:8123/mcp" }
+  }
+}
+```
+
+| Variable | Défaut | Rôle |
+|---|---|---|
+| `IMMO_HTTP_PORT` | *(absente = stdio)* | Port d'écoute ; sa présence bascule le serveur en mode HTTP |
+| `IMMO_HTTP_HOST` | `127.0.0.1` | Adresse de liaison |
+
+À savoir avant d'exposer le serveur :
+
+- **Bouclage local par défaut.** Il n'écoute que sur `127.0.0.1` : un serveur
+  MCP sans authentification donne accès à tout le surface d'outils. Pour le
+  partager au-delà de la machine, liez-le délibérément (`IMMO_HTTP_HOST`) et
+  protégez l'accès (reverse proxy avec authentification, pare-feu…). Aucune
+  authentification n'est implémentée côté serveur.
+- **Sessions.** Chaque session MCP (`initialize`) reçoit son propre couple
+  serveur/transport, routé par l'en-tête `Mcp-Session-Id`. Une session
+  inconnue répond `404`, une méthode non autorisée `405`.
+- **Réponses JSON.** Chaque outil est une requête/réponse unique (pas de flux
+  serveur-initié), donc le serveur répond en JSON direct — compatible curl et
+  tout client Streamable HTTP (qui doit accepter `application/json` **et**
+  `text/event-stream`, comme le veut la spécification).
+- **stdio reste la voie par défaut.** Rien ne change pour Claude Code, Cline ou
+  tout client qui lance le paquet : sans `IMMO_HTTP_PORT`, c'est exactement le
+  même comportement qu'avant.
 
 ## Installer depuis le registre MCP
 

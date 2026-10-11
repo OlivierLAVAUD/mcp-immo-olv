@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Streamable HTTP transport.** Setting `IMMO_HTTP_PORT` switches the same
+  tool registry from stdio to the MCP Streamable HTTP transport, so the server
+  can be hosted, shared or reached by a client that cannot spawn a subprocess.
+  `IMMO_HTTP_HOST` sets the bind address (loopback by default, as an
+  unauthenticated MCP server exposes the whole tool surface). Each session
+  (`initialize`) gets its own server + transport pair, routed by the
+  `Mcp-Session-Id` header; unknown sessions answer 404. Tools answer in direct
+  JSON — every tool is one request/response, no server-initiated stream. stdio
+  stays the default: without the variable, nothing changes for the clients that
+  spawn the package. Covered by integration tests (a real MCP client over a
+  local socket, five assertions) plus a live curl check.
+
 ## 1.9.0 — 2026-10-11
 
 ### Fixed
