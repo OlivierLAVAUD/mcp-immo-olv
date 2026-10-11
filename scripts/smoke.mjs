@@ -20,7 +20,7 @@ import {
   communeInfo,
 } from "../dist/handlers.js";
 import { OUTPUT_SCHEMAS } from "../dist/output-schemas.js";
-import { PARIS_RENT_CONTROL_URL, LYON_RENT_CONTROL_URL } from "../dist/apis/rent_control.js";
+import { PARIS_RENT_CONTROL_URL, LYON_RENT_CONTROL_URL, MONTPELLIER_RENT_CONTROL_URL } from "../dist/apis/rent_control.js";
 
 const ADDRESS = process.argv[2] ?? "12 rue de la République Lyon";
 let failures = 0;
@@ -303,9 +303,11 @@ const emitted = new Map([
   [urbanism?.source_url, "Géoportail de l'urbanisme"],
   [neighbourhood?.source_url, "IRIS ADMINEXPRESS"],
   [rentControlled?.source_url, "Encadrement des loyers (Paris)"],
-  // Both constants, so the Lyon grid is checked even though this run queries Paris.
+  // Both constants, so the Lyon and Montpellier grids are checked even though
+  // this run queries Paris.
   [PARIS_RENT_CONTROL_URL, "Encadrement des loyers (Paris, constante)"],
   [LYON_RENT_CONTROL_URL, "Encadrement des loyers (Lyon, constante)"],
+  [MONTPELLIER_RENT_CONTROL_URL, "Encadrement des loyers (Montpellier, constante)"],
 ].filter(([url]) => typeof url === "string" && url.startsWith("http")));
 
 for (const [url, label] of emitted) {

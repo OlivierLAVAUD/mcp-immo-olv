@@ -2,14 +2,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   latestPeriodYear,
   lyonTypenameFromUrl,
+  montpellierGridRows,
   parisRentControl,
   pickLyonValues,
+  pickMontpellierRow,
   pickParisRecord,
   rentControlAtPoint,
   ParisRentRecord,
 } from "../src/apis/rent_control.js";
 
 afterEach(() => vi.unstubAllGlobals());
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+}
 
 const parisRows: ParisRentRecord[] = [
   { annee: "2024", piece: 2, epoque: "1946-1970", meuble_txt: "non meublé", ref: 25, min: 17.5, max: 30 },
@@ -83,6 +89,106 @@ describe("source resolution helpers", () => {
   it("reads the latest period year from a dataset title", () => {
     expect(latestPeriodYear("Encadrement des loyers de la Métropole de Lyon 2025-2026")).toBe(2026);
     expect(latestPeriodYear("Encadrement des loyers - référentiel")).toBeNull();
+  });
+});
+
+describe("Montpellier", () => {
+  const HEADER = [
+    "Nb pièces",
+    "Époque de construction",
+    "Loyer réf. non meublé",
+    "Loyer réf. majoré",
+    "Loyer réf. minoré",
+    "Majoration unitaire",
+    "Loyer réf. meublé",
+    "Loyer réf. majoré meublé",
+    "Loyer réf. minoré meublé",
+  ];
+
+  /** One zone sheet: header + 4 room groups × 5 construction periods. */
+  function zoneGrid(base: number): string[][] {
+    const periods = ["Avant 1946", "1946-1970", "1971-1990", "1991-2005", "Après 2005"];
+    const rooms = ["1", "2", "3", "4 et plus"];
+    const rows = [HEADER];
+    let i = 0;
+    for (const r of rooms)
+      for (const p of periods) {
+        const ref = base - i * 0.5;
+        rows.push([
+          r,
+          p,
+          String(ref),
+          String(ref + 2),
+          String(ref - 4),
+          String(1),
+          String(ref + 1.5),
+          String(ref + 3.5),
+          String(ref - 2.5),
+        ]);
+        i++;
+      }
+    return rows;
+  }
+
+  it("parses a zone grid into furnished and unfurnished triplets", () => {
+    const rows = montpellierGridRows([zoneGrid(12)], 1);
+    expect(rows).toHaveLength(20);
+    // First row: 1 piece, Avant 1946.
+    expect(rows[0].rooms).toBe(1);
+    expect(rows[0].period).toBe("Avant 1946");
+    expect(rows[0].values.reference_eur_m2_month).toBe(12);
+    expect(rows[0].values.ceiling_eur_m2_month).toBe(14);
+    expect(rows[0].values.floor_eur_m2_month).toBe(8);
+    expect(rows[0].furnished.reference_eur_m2_month).toBe(13.5);
+    // "4 et plus" folds to rooms 4.
+    expect(rows[19].rooms).toBe(4);
+    expect(rows[19].period).toBe("Après 2005");
+  });
+
+  it("refuses a sheet that is not the published grid shape", () => {
+    // Wrong header, and a short row count: both must yield an empty grid.
+    expect(montpellierGridRows([[["Nb pièces", "bad"]], ["1", "x"]], 1)).toEqual([]);
+    expect(montpellierGridRows([zoneGrid(12).slice(0, 5)], 1)).toEqual([]);
+    // Out-of-range zone.
+    expect(montpellierGridRows([zoneGrid(12)], 9)).toEqual([]);
+  });
+
+  it("picks the closest room count, then the requested period", () => {
+    const rows = montpellierGridRows([zoneGrid(12)], 1);
+    const picked = pickMontpellierRow(rows, { rooms: 3, period: "1946-1970" })!;
+    expect(picked.rooms).toBe(3);
+    expect(picked.period).toBe("1946-1970");
+    // No period given: deterministic closest-period fallback.
+    expect(pickMontpellierRow(rows, { rooms: 2 })!.rooms).toBe(2);
+  });
+
+  it("resolves a Montpellier IRIS through the registry and degrades gracefully", async () => {
+    // A Montpellier point (INSEE 34172). The zoning knows the IRIS; the workbook
+    // stub is not a real .xlsx, so the grid read throws and the adapter reports
+    // "not covered" rather than inventing a ceiling — the same graceful path a
+    // real Overpass/ADEME outage takes elsewhere.
+    const zoning = { features: [{ properties: { code_iris: "341722501", zone_oll: 3 } }] };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) =>
+        String(input).includes("MMM_MTP_Loyers.json")
+          ? jsonResponse(zoning)
+          : new Response("not a zip", { status: 200 }),
+      ),
+    );
+
+    const outcome = await rentControlAtPoint(43.6, 3.88, "34172", { rooms: 2, period: "1946-1970" }, "341722501");
+    expect(outcome.covered).toBe(false);
+  });
+
+  it("lists Montpellier among the covered cities", async () => {
+    const outcome = await rentControlAtPoint(43.6045, 1.4442, "31555", {});
+    expect(outcome.covered).toBe(false);
+    if (!outcome.covered) {
+      expect(outcome.covered_cities).toContain("Paris");
+      expect(outcome.covered_cities).toContain("Métropole de Lyon");
+      expect(outcome.covered_cities).toContain("Montpellier");
+    }
   });
 });
 

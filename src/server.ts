@@ -385,7 +385,7 @@ export function createServer(): McpServer {
     {
       title: "Rent-control reference rents",
       description:
-        "Loyer de référence, loyer de référence majoré (the legal ceiling) and minoré, in €/m²/month, for a rent-controlled area — by number of rooms, construction period and furnished status. Covers only the areas whose authority publishes an open grid (Paris, Métropole de Lyon); the response states explicitly when an address is not covered instead of guessing. Sources: Ville de Paris, Métropole de Lyon.",
+        "Loyer de référence, loyer de référence majoré (the legal ceiling) and minoré, in €/m²/month, for a rent-controlled area — by number of rooms, construction period and furnished status. Covers only the areas whose authority publishes an open grid (Paris, Métropole de Lyon, Montpellier); the response states explicitly when an address is not covered instead of guessing. Sources: Ville de Paris, Métropole de Lyon, Montpellier Méditerranée Métropole.",
       inputSchema: {
         address: z.string().describe("Address in France"),
         rooms: z.number().int().min(1).max(10).optional().describe("Number of rooms (pièces)"),

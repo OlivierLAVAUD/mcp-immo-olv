@@ -1,4 +1,4 @@
-import { fetchJson } from "../http.js";
+import { fetchJson, HttpError } from "../http.js";
 import { departementFromInsee, parentCommuneCode } from "../util/geo.js";
 
 /**
@@ -180,6 +180,160 @@ export interface LyonValue {
 
 export type LyonValeurs = Record<string, Record<string, Record<string, LyonValue>>>;
 
+// ------------------------------------------------- xlsx reader (Montpellier)
+
+/**
+ * An .xlsx is a zip of XML files: `xl/sharedStrings.xml` holds the texts once
+ * (cells reference them by index) and `xl/worksheets/sheetN.xml` holds one
+ * sheet each. Node has no zip reader in scope and gains no dependency here —
+ * the boilerplate below is the smallest honest reader for this fixed file:
+ * entries are located through the central directory, inflated with the
+ * platform `DecompressionStream`, and shared strings resolved by index.
+ *
+ * Two format decisions, both deliberate:
+ *
+ *  - Cells are placed by their **address letters** (`A1`, not position in the
+ *    row): OOXML omits empty cells, so positional reading would shift
+ *    everything after the first gap — and this workbook has gaps.
+ *  - A missing entry *inside* a row becomes `""`, never a shifted column. The
+ *    grid parser turns non-numeric values into `null`, and the shape guard
+ *    rejects a sheet that does not look like the published grid.
+ */
+export interface XlsxSheet {
+  /** Raw cell matrix of the sheet, header row first; dense by column letter. */
+  cells: string[][];
+}
+
+interface XlsxZipEntry {
+  dataOffset: number;
+  length: number;
+  method: number;
+}
+
+/** The zip central directory: entry name -> its bytes. */
+function xlsxEntries(buffer: ArrayBuffer): Map<string, XlsxZipEntry> {
+  const view = new DataView(buffer);
+  const u8 = new Uint8Array(buffer);
+  const decoder = new TextDecoder("utf-8");
+
+  let eocd = -1;
+  for (let i = buffer.byteLength - 22; i >= 0; i--) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd === -1) throw new Error("not an xlsx (no end of central directory)");
+
+  const entries = new Map<string, XlsxZipEntry>();
+  const count = view.getUint16(eocd + 10, true);
+  let offset = view.getUint32(eocd + 16, true);
+  for (let i = 0; i < count; i++) {
+    if (view.getUint32(offset, true) !== 0x02014b50) break;
+    const method = view.getUint16(offset + 10, true);
+    const nameLen = view.getUint16(offset + 28, true);
+    const extraLen = view.getUint16(offset + 30, true);
+    const commentLen = view.getUint16(offset + 32, true);
+    const headerOffset = view.getUint32(offset + 42, true);
+    const name = decoder.decode(u8.subarray(offset + 46, offset + 46 + nameLen));
+    const localNameLen = view.getUint16(headerOffset + 26, true);
+    const localExtraLen = view.getUint16(headerOffset + 28, true);
+    entries.set(name, {
+      dataOffset: headerOffset + 30 + localNameLen + localExtraLen,
+      length: view.getUint32(offset + 24, true),
+      method,
+    });
+    offset += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+
+async function xlsxInflate(buffer: ArrayBuffer, entry: XlsxZipEntry): Promise<string> {
+  const slice = buffer.slice(entry.dataOffset, entry.dataOffset + entry.length);
+  if (entry.method === 0) return new TextDecoder("utf-8").decode(slice);
+  const stream = new Response(new Blob([slice]).stream().pipeThrough(new DecompressionStream("deflate-raw")));
+  return stream.text();
+}
+
+/** The plain texts of a workbook, indexed by shared-string reference. */
+function xlsxSharedTexts(xml: string): string[] {
+  const out: string[] = [];
+  const itemRe = /<si>([\s\S]*?)<\/si>/g;
+  let itemMatch: RegExpExecArray | null;
+  while ((itemMatch = itemRe.exec(xml)) !== null) {
+    const texts: string[] = [];
+    const textRe = /<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g;
+    let textMatch: RegExpExecArray | null;
+    while ((textMatch = textRe.exec(itemMatch[1])) !== null) texts.push(textMatch[1]);
+    out.push(unescapeXml(texts.join("")));
+  }
+  return out;
+}
+
+function unescapeXml(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+/** A column letter address (`A`, `Z`, `AA`…) -> zero-based column. */
+function xlsxColumn(ref: string | null): number {
+  const m = /^([A-Z]+)/.exec(ref ?? "");
+  if (!m) return -1;
+  let n = 0;
+  for (const ch of m[1]) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+/** One sheet's rows as a dense matrix, addressed by cell letter. */
+export function xlsxCellsOfSheet(xml: string, shared: string[]): string[][] {
+  const rows: string[][] = [];
+  const rowRe = /<row\b[^>]*>([\s\S]*?)<\/row>/g;
+  let rowMatch: RegExpExecArray | null;
+  while ((rowMatch = rowRe.exec(xml)) !== null) {
+    const cells: string[] = [];
+    const cellRe = /<c\b([^>]*)>(?:<v>([\s\S]*?)<\/v>)?<\/c>/g;
+    let cellMatch: RegExpExecArray | null;
+    while ((cellMatch = cellRe.exec(rowMatch[1])) !== null) {
+      const index = xlsxColumn(/\br="([^"]*)"/.exec(cellMatch[1])?.[1] ?? null);
+      if (index < 0) continue;
+      while (cells.length <= index) cells.push("");
+      const raw = (cellMatch[2] ?? "").trim();
+      // A shared-string cell holds an index; a missing index is data rot, and
+      // the column stays empty rather than shifting its neighbours.
+      cells[index] = /\bt="s"/.test(cellMatch[1]) ? (shared[Number(raw)] ?? "") : unescapeXml(raw);
+    }
+    rows.push(cells);
+  }
+  return rows;
+}
+
+/**
+ * Fetch the grid workbook and unpack the five zone sheets into dense cell
+ * matrices, header row first. Cached 24 h like every other slow layer — the
+ * .xlsx is ~17 kB, so the prize is the round trip, not the bytes.
+ */
+export async function montpellierGridSheets(): Promise<XlsxSheet[]> {
+  const res = await fetch(MONTPELLIER_GRID_URL);
+  if (!res.ok) throw new HttpError(res.status, MONTPELLIER_GRID_URL);
+  const buffer = await res.arrayBuffer();
+  const entries = xlsxEntries(buffer);
+  const readEntry = async (name: string): Promise<string> => {
+    const entry = entries.get(name);
+    if (!entry) throw new Error(`xlsx entry missing from the grid workbook: ${name}`);
+    return xlsxInflate(buffer, entry);
+  };
+  const shared = xlsxSharedTexts(await readEntry("xl/sharedStrings.xml"));
+  const sheets: XlsxSheet[] = [];
+  for (let n = 1; n <= MONTPELLIER_ZONE_NAMES.length; n++) {
+    sheets.push({ cells: xlsxCellsOfSheet(await readEntry(`xl/worksheets/sheet${n}.xml`), shared) });
+  }
+  return sheets;
+}
+
 /** Read the WFS layer name out of a data.gouv resource URL. */
 export function lyonTypenameFromUrl(url: string): string | null {
   const match = /[?&]typename=([^&]+)/i.exec(url);
@@ -322,7 +476,180 @@ export async function lyonRentControl(
   };
 }
 
-// ----------------------------------------------------------------- registry
+// ------------------------------------------------------------ Montpellier
+
+const MONTPELLIER_BASE = "https://data.montpellier3m.fr/sites/default/files/ressources";
+/**
+ * The metropole's open layer: one authoritative workbook (Zone1..Zone5 sheets
+ * are the per-zone grids) and one GeoJSON mapping each IRIS to an OLL zone
+ * (`zone_oll`, 1–5). Stable paths from the open portal, published yearly.
+ */
+const MONTPELLIER_GRID_URL = `${MONTPELLIER_BASE}/MMM_MTP_Loyers.xlsx`;
+const MONTPELLIER_ZONES_URL = `${MONTPELLIER_BASE}/MMM_MTP_Loyers.json`;
+// Checked live by the smoke test, like its Paris and Lyon counterparts: the
+// first guess (a montpellier3m.fr vanity path) 301-redirected to the home
+// page, so the URL a client can check by hand is the city's own dossier.
+export const MONTPELLIER_RENT_CONTROL_URL =
+  "https://www.montpellier.fr/vie-quotidienne/vivre-ici/se-loger/lencadrement-des-loyers";
+
+export interface MontpellierRow {
+  /** 1 | 2 | 3 | 4, with "4 et plus" folded to 4. */
+  rooms: number;
+  /** "Avant 1946" | "1946-1970" | "1971-1990" | "1991-2005" | "Après 2005". */
+  period: string;
+  values: RentControlValues;
+  /** The row for a furnished dwelling, from the meublé triplet. */
+  furnished: RentControlValues;
+}
+
+/**
+ * Pick the row that best matches the query inside one zone grid — closest
+ * room count first, then the requested construction period, like Lyon walks
+ * rooms -> period -> furnished status. Pure and unit-tested.
+ */
+export function pickMontpellierRow(rows: MontpellierRow[], query: RentControlQuery): MontpellierRow | null {
+  if (rows.length === 0) return null;
+
+  const wantedRooms = query.rooms ?? 1;
+  const wantedPeriod = query.period;
+  // Exact and closest periods come from the column headers themselves, so an
+  // unknown label is simply not exact.
+  return (
+    [...rows].sort((a, b) => {
+      const byRooms = Math.abs(a.rooms - wantedRooms) - Math.abs(b.rooms - wantedRooms);
+      if (byRooms !== 0) return byRooms;
+      if (wantedPeriod !== undefined) {
+        const aExact = a.period === wantedPeriod ? 0 : 1;
+        const bExact = b.period === wantedPeriod ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+      }
+      return a.period < b.period ? -1 : a.period > b.period ? 1 : 0;
+    })[0] ?? null
+  );
+}
+
+/**
+ * Read the zone mapping straight from the metropole's GeoJSON: one feature
+ * per IRIS, `properties.zone_oll` carried by the value the portal itself
+ * publishes. Cached 24 h like every other slow official layer.
+ */
+export async function montpellierZoning(): Promise<Record<string, number>> {
+  const data = await fetchJson<{ features?: { properties?: Record<string, unknown> }[] }>(
+    MONTPELLIER_ZONES_URL,
+    24 * 60 * 60_000,
+  );
+  const zones: Record<string, number> = {};
+  for (const feature of data.features ?? []) {
+    const p = feature.properties ?? {};
+    const code = typeof p.code_iris === "string" ? p.code_iris : null;
+    const zone = typeof p.zone_oll === "number" ? p.zone_oll : null;
+    if (code && zone !== null && zone >= 1 && zone <= 5) zones[code] = zone;
+  }
+  return zones;
+}
+
+/** The named sheets of the grid workbook: Zone1..Zone5, in that order. */
+export const MONTPELLIER_ZONE_NAMES = ["Zone1", "Zone2", "Zone3", "Zone4", "Zone5"] as const;
+
+/**
+ * Montpellier: point -> zone from the IRIS, grid from the workbook.
+ *
+ * The metropole's authoritative layer is a workbook plus a zoned GeoJSON, so
+ * this function takes the grid already extracted (`grids[zone]` is the raw
+ * cell matrix of the ZoneN sheet, header row first) and parses it into rows —
+ * fetching and unzipping the .xlsx stays in the handler, next to the URLs the
+ * smoke test must keep checking. Each data row carries both triplets:
+ * non-meublé, then meublé.
+ *
+ * The format guard is strict on purpose: a sheet that does not look like the
+ * published grid (header lost, extra columns, five missing epochs) must stay
+ * unread rather than misread. Montpellier publishes one fixed table per zone —
+ * 4 room groups × 5 construction periods — and the code trusts exactly that.
+ */
+export function montpellierGridRows(grids: string[][][], zone: number): MontpellierRow[] {
+  const grid = grids[zone - 1];
+  if (!grid || grid.length < 2) return [];
+
+  const header = grid[0];
+  const expectHeader = (i: number, want: RegExp): boolean => want.test(header[i] ?? "");
+  const shaped =
+    header.length === 9 &&
+    /^nb p/i.test(header[0] ?? "") &&
+    /poq/i.test(header[1] ?? "") &&
+    expectHeader(2, /f\.?\s*non/i) &&
+    expectHeader(6, /f\.?\s*meubl/i);
+  if (!shaped) return [];
+
+  const num = (s: string | undefined): number | null => {
+    if (s === undefined) return null;
+    const v = Number(s.replace(/\s/g, "").replace(",", "."));
+    return Number.isFinite(v) ? v : null;
+  };
+
+  const rows: MontpellierRow[] = [];
+  for (const cells of grid.slice(1)) {
+    const rooms = /^4/.test(cells[0] ?? "") ? 4 : num(cells[0]);
+    const period = (cells[1] ?? "").trim();
+    if (rooms === null || !period) continue;
+    const values = {
+      reference_eur_m2_month: num(cells[2]),
+      ceiling_eur_m2_month: num(cells[3]),
+      floor_eur_m2_month: num(cells[4]),
+    };
+    const furnished = {
+      reference_eur_m2_month: num(cells[6]),
+      ceiling_eur_m2_month: num(cells[7]),
+      floor_eur_m2_month: num(cells[8]),
+    };
+    rows.push({ rooms, period, values, furnished });
+  }
+  // Montpellier's grid is fixed: 4 room groups × 5 periods = 20 data rows.
+  // Anything else is a changed format, not a grid we know how to read.
+  return rows.length === 20 ? rows : [];
+}
+
+/**
+ * Fetch the zone mapping, then the workbook grids, then resolve the query.
+ *
+ * Two-step resolution, like Lyon: the point's IRIS (carried by the handler)
+ * places it in a zone, and that zone's grid holds the reference rents. The
+ * consumer gets the reference, ceiling and floor per furnished state.
+ */
+export async function montpellierRentControl(
+  codeIris: string,
+  query: RentControlQuery,
+): Promise<RentControlResult | null> {
+  const zones = await montpellierZoning();
+  const zone = zones[codeIris];
+  if (zone === undefined) return null;
+
+  const sheets = await montpellierGridSheets();
+  const rows = montpellierGridRows(sheets.map((s) => s.cells), zone);
+  const picked = pickMontpellierRow(rows, query);
+  if (!picked) return null;
+
+  const wanted = query.furnished ?? false;
+  const triplet = wanted ? picked.furnished : picked.values;
+  const exact =
+    (query.rooms === undefined || query.rooms === picked.rooms) &&
+    (query.period === undefined || query.period === picked.period) &&
+    (query.furnished === undefined || query.furnished === wanted);
+
+  return {
+    city: "Montpellier",
+    area_label: `Zone ${zone}`,
+    year: null,
+    rooms: picked.rooms,
+    period: picked.period,
+    furnished: wanted,
+    values: triplet,
+    matched: exact ? "exact" : "closest",
+    source: RENT_CONTROL_SOURCE,
+    source_url: MONTPELLIER_RENT_CONTROL_URL,
+    note: RENT_CONTROL_NOTE,
+    caveats: CAVEATS,
+  };
+}
 
 export interface RentControlNotCovered {
   covered: false;
@@ -345,6 +672,7 @@ export const RENT_CONTROL_AREAS: {
 }[] = [
   { city: "Paris", matches: (code) => parentCommuneCode(code) === "75056" },
   { city: "Métropole de Lyon", matches: (code) => departementFromInsee(code) === "69" },
+  { city: "Montpellier", matches: (code) => parentCommuneCode(code) === "34172" },
 ];
 
 /**
@@ -378,6 +706,11 @@ export async function rentControlAtPoint(
     }
     if (area.city === "Métropole de Lyon" && codeIris) {
       const result = await lyonRentControl(codeIris, query).catch(() => null);
+      if (result) return { ...result, covered: true };
+    }
+    // Montpellier keys its zone grid by IRIS, like Lyon.
+    if (area.city === "Montpellier" && codeIris) {
+      const result = await montpellierRentControl(codeIris, query).catch(() => null);
       if (result) return { ...result, covered: true };
     }
   }

@@ -48,8 +48,8 @@ Si l'adresse n'est pas parfaitement identifiée, résous-la d'abord avec
 - **DVF = ventes passées.** Les prix notariés décrivent un marché réalisé, ils ne
   disent pas le prix demandé aujourd'hui, ni l'état du bien.
 - **Encadrement des loyers : couverture partielle.** Seules les zones publiant une
-  grille ouverte sont couvertes (Paris, Métropole de Lyon). Si l'outil répond que
-  l'adresse n'est pas couverte, ne généralise pas le plafond.
+  grille ouverte sont couvertes (Paris, Métropole de Lyon, Montpellier). Si
+  l'outil répond que l'adresse n'est pas couverte, ne généralise pas le plafond.
 - **Urbanisme : règles, pas autorisation.** `urbanism_zoning` dit quelles règles
   s'appliquent. Toute décision de projet renvoie au service urbanisme compétent.
 - **Cadastre : pas de propriétaire.** L'outil donne parcelle et contenance fiscale

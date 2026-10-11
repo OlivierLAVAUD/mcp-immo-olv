@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Montpellier joins the rent-control registry.** `rent_control` now answers for
+  Montpellier (INSEE 34172), the third area whose authority publishes an open
+  reference grid. Montpellier keys its grid by IRIS (zone 1–5), so the point's
+  IRIS is resolved first, exactly like Lyon. The grid itself is the metropole's
+  yearly workbook (`MMM_MTP_Loyers.xlsx`, Zone1..Zone5 sheets) plus a GeoJSON
+  mapping each IRIS to an OLL zone; a small dependency-free xlsx reader unpacks
+  both. The zone is read from `zone_oll` and the reference / ceiling / floor
+  from the zone's sheet, per furnished status. The strict format guard (fixed
+  4 room groups × 5 periods, header shape) rejects anything it does not
+  recognise rather than misreading it; a workbook outage degrades to "not
+  covered" like any other source failure. The human `source_url` is the city's
+  own dossier — the first montpellier3m.fr guess 301-redirected to the home
+  page — and the smoke test HEADs it live. Verified live: Zone 1, T3, 1946-1970
+  unfurnished → 12.3 / 14.8 / 8.6 €/m²/month, matching the published grid.
+
 ## 1.10.0 — 2026-10-11
 
 ### Added

@@ -238,7 +238,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `property_sales` | Ventes notariées réelles autour d'une adresse ou dans une commune | DVF (DGFiP / Etalab) |
 | `price_per_m2` | Médiane, quartiles, évolution annuelle et fenêtre 12 mois | DVF (DGFiP / Etalab) |
 | `rent_estimate` | Indicateurs de loyer d'annonce par segment | Carte des loyers (Ministère du Logement / ANIL) |
-| `rent_control` | Loyer de référence, plafond légal (majoré) et minoré | Encadrement des loyers (Ville de Paris, Métropole de Lyon) |
+| `rent_control` | Loyer de référence, plafond légal (majoré) et minoré | Encadrement des loyers (Ville de Paris, Métropole de Lyon, Montpellier) |
 | `property_tax_estimate` | Charge annuelle moyenne par article taxable, ventilée par composante | REI (DGFiP), via API publique OFGL |
 | `dpe_lookup` | Diagnostics de performance énergétique à l'adresse, logements existants **et** neufs, avec statut légal de location par étiquette (décret n° 2024-501) et coût énergétique annuel estimé | ADEME (`dpe03existant`, `dpe02neuf`) |
 | `cadastral_parcel` | Parcelle cadastrale : identifiant `idu`, section, numéro, contenance officielle | PCI, IGN / DGFiP (API Carto) |
@@ -327,7 +327,7 @@ les URL que le serveur renvoie dans une réponse — `source_url`, `officialRepo
 |---|---|---|
 | [DVF géolocalisées](https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/) | DGFiP / Etalab | Ventes 2021 → présent ; **aucune source géolocalisée avant 2021** ; pas d'Alsace-Moselle ni Mayotte ; délai de publication |
 | [Carte des loyers](https://www.data.gouv.fr/fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2025/) | Ministère du Logement / ANIL | Loyer d'annonce modélisé, charges comprises ; pas un loyer de référence réglementé |
-| Encadrement des loyers | [Ville de Paris](https://www.paris.fr/pages/l-encadrement-des-loyers-parisiens-en-vigueur-le-1er-aout-2712) et [Métropole de Lyon](https://www.grandlyon.com/mes-services-au-quotidien/se-loger-ameliorer-ou-louer-son-logement/sinformer-sur-lencadrement-des-loyers) | Loyers de référence des zones couvertes uniquement ; « non couvert » est renvoyé explicitement ailleurs |
+| Encadrement des loyers | [Ville de Paris](https://www.paris.fr/pages/l-encadrement-des-loyers-parisiens-en-vigueur-le-1er-aout-2712), [Métropole de Lyon](https://www.grandlyon.com/mes-services-au-quotidien/se-loger-ameliorer-ou-louer-son-logement/sinformer-sur-lencadrement-des-loyers) et [Montpellier](https://www.montpellier.fr/vie-quotidienne/vivre-ici/se-loger/lencadrement-des-loyers) | Loyers de référence des zones couvertes uniquement ; « non couvert » est renvoyé explicitement ailleurs |
 | [REI](https://data.ofgl.fr/explore/dataset/rei/) | DGFiP, exposé par OFGL | Fiscalité locale agrégée ; moyenne par article, jamais taxe individuelle |
 | [DPE logements existants](https://data.ademe.fr/datasets/dpe-v2-logements-existants) et [neufs](https://data.ademe.fr/datasets/dpe-v2-logements-neufs) | ADEME | Diagnostics `dpe03existant` et `dpe02neuf`, chacun étiqueté par registre |
 | [Cadastre (PCI)](https://cadastre.data.gouv.fr/) | IGN / DGFiP ([API Carto](https://apicarto.ign.fr/api/doc/cadastre)) | Parcelle, `idu` et contenance ; jamais la propriété ni le droit de construire |
