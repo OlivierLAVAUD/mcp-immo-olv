@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`commune_info` now carries the INSEE legal population.** Next to the
+  recensement estimate geo.api.gouv.fr already served, each commune gains
+  `population_legale`: pmun (population municipale, the headline legal figure),
+  pcap (population comptée à part — students living elsewhere, military,
+  detaines…) and ptot (total = pmun + pcap), millésime 2021. INSEE publishes
+  these only as a yearly national archive (a .zip of CSVs, ~35 000 communes),
+  so the module downloads it once, re-parses on a shape change via a
+  dependency-free zip reader, and spills the parsed table to disk behind
+  IMMO_CACHE_DIR — the same L1/L2 pattern as DVF. For Paris / Lyon / Marseille
+  the legal figure sums the municipal arrondissements, since INSEE publishes
+  them at that level while geo.api serves the parent (verified live: Paris
+  2 133 111, Marseille 873 076). Scope is honest: this adds the legal
+  breakdown, not the demographic trend the roadmap wanted — vacant dwellings
+  and secondary residences are not exposed by any anonymous per-commune API, so
+  they stay absent rather than approximated, and the note says so.
+
 ## 1.11.0 — 2026-10-11
 
 ### Added

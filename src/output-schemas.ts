@@ -331,6 +331,11 @@ const communeView = obj({
   departement: obj({ code: z.string(), nom: z.string() }).optional(),
   region: obj({ code: z.string(), nom: z.string() }).optional(),
   population: z.number().optional(),
+  population_legale: obj({
+    pmun: z.number().nullable().describe("INSEE population municipale — the headline legal figure"),
+    pcap: z.number().nullable().describe("Population comptée à part (students living elsewhere, military, detaines…)"),
+    ptot: z.number().nullable().describe("Population totale = pmun + pcap"),
+  }).optional().describe("INSEE legal population, summed over municipal arrondissements for Paris/Lyon/Marseille"),
   surface_km2: z.number().optional(),
   center: point.optional(),
 });
@@ -338,6 +343,7 @@ const communeView = obj({
 const communeInfoOutput = obj({
   source: z.string(),
   communes: z.array(communeView),
+  note: z.string().optional(),
 });
 
 const cadastralParcel = obj({

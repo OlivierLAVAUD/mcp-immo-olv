@@ -247,7 +247,7 @@ claude mcp add immo-olv -- cmd /c npx -y mcp-immo-olv@latest
 | `nearby_amenities` | Ce qu'il y a autour d'une adresse : transports, écoles, commerces, santé, espaces verts — nombre dans le rayon et distance à vol d'oiseau des plus proches, avec un détail train / métro / tram / bus pour les transports | OpenStreetMap (ODbL), API Overpass |
 | `natural_risks` | Risques naturels et technologiques officiels | Géorisques |
 | `risk_summary` | Digest des risques : une phrase par risque (inondation, argile, radon, ICPE, DPE), explicite sur les inconnus | Géorisques + ADEME |
-| `commune_info` | Population, code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |
+| `commune_info` | Population (recensement + population légale INSEE pmun/pcap/ptot), code postal, département, région, surface, centre | geo.api.gouv.fr / INSEE |
 | `geocode_address` / `reverse_geocode` | Adresse ↔ coordonnées, code INSEE et identifiant BAN | Base Adresse Nationale |
 
 ### Sortie structurée

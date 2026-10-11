@@ -4,6 +4,8 @@ import { riskReport, GEORISQUES_PORTAL } from "../apis/georisques.js";
 import { summarizeRisks } from "../risk-summary.js";
 import type { RentalCompliance } from "../dpe-compliance.js";
 import { communeByCode, communesByName } from "../apis/communes.js";
+import { legalPopulationFor, POPULATIONS_YEAR } from "../apis/populations.js";
+import { expandPlmCodes } from "../util/geo.js";
 import { parcelsAtPoint, CADASTRE_SOURCE, CADASTRE_SOURCE_URL } from "../apis/cadastre.js";
 import { zonesAtPoint, prescriptionsAtPoint, GPU_SOURCE, GPU_SOURCE_URL } from "../apis/gpu.js";
 import { irisAtPoint, IRIS_SOURCE, IRIS_SOURCE_URL } from "../apis/iris.js";
@@ -149,18 +151,45 @@ export async function communeInfo(args: { query: string }) {
   const isCode = /^\d[0-9AB]\d{3}$/i.test(q);
   const communes = isCode ? [await communeByCode(q.toUpperCase())] : await communesByName(q);
   if (communes.length === 0) throw new Error(`No commune found for "${q}".`);
+
+  // INSEE publishes legal populations at the municipal-arrondissement level
+  // for Paris / Lyon / Marseille, while geo.api serves the parent commune.
+  // Sum the arrondissements so a city-wide code gets the whole city's figure.
+  const withLegal = await Promise.all(
+    communes.map(async (c) => {
+      const codes = expandPlmCodes(c.code);
+      const rows = await Promise.all(codes.map((code) => legalPopulationFor(code).catch(() => null)));
+      const present = rows.filter((r): r is NonNullable<typeof r> => r !== null);
+      if (present.length === 0) return { commune: c, legal: null };
+      const sum = (pick: (r: NonNullable<typeof rows[number]>) => number | null): number | null => {
+        const values = present.map(pick).filter((v): v is number => v !== null);
+        return values.length === present.length ? values.reduce((a, b) => a + b, 0) : null;
+      };
+      return {
+        commune: c,
+        legal: {
+          pmun: sum((r) => r.pmun),
+          pcap: sum((r) => r.pcap),
+          ptot: sum((r) => r.ptot),
+        },
+      };
+    }),
+  );
+
   return {
-    source: "geo.api.gouv.fr (INSEE)",
-    communes: communes.map((c) => ({
+    source: "geo.api.gouv.fr (INSEE) + populations légales INSEE",
+    communes: withLegal.map(({ commune: c, legal }) => ({
       nom: c.nom,
       insee_code: c.code,
       postcodes: c.codesPostaux,
       departement: c.departement,
       region: c.region,
       population: c.population,
+      population_legale: legal ?? undefined,
       surface_km2: c.surface !== undefined ? round(c.surface / 100, 1) : undefined,
       center: c.centre?.coordinates ? { lon: c.centre.coordinates[0], lat: c.centre.coordinates[1] } : undefined,
     })),
+    note: `population is the recensement estimate from geo.api.gouv.fr; population_legale is INSEE's official legal figure (millésime ${POPULATIONS_YEAR}): pmun population municipale (the headline), pcap population comptée à part, ptot total = pmun + pcap. For Paris/Lyon/Marseille the legal figure sums the municipal arrondissements, since INSEE publishes them at that level. A missing population_legale means the code was not in the archive.`,
   };
 }
 
